@@ -35,7 +35,7 @@ class CustomUser(AbstractUser):
         validators=[
             MinLengthValidator(EMAIL_FIELD_MIN_LENGTH),
             MaxLengthValidator(EMAIL_FIELD_MAX_LENGTH),
-            RegexValidator(message='Недопустимый email'),
+            EmailValidator(message='Недопустимый email'),
         ]
     )
 
@@ -57,6 +57,14 @@ class CustomUser(AbstractUser):
             MaxLengthValidator(USERNAME_FIELD_MAX_LENGTH),
             MinLengthValidator(USERNAME_FIELD_MIN_LENGTH),
         ]
+    )
+
+    avatar = models.ImageField(
+        'Аватар',
+        blank=True,
+        upload_to='users/images/',
+        null=True,
+        default=None
     )
 
     role = models.CharField(
