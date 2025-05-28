@@ -1,26 +1,20 @@
-from datetime import timedelta
-from os import getenv
+from os import getenv, path
 from pathlib import Path
 
+from django.core.management.utils import get_random_secret_key
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+DEFAULT_PAGE_SIZE = 10
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-TOKEN_LIFETIME = 10
+SECRET_KEY = getenv('SECRET_KEY', get_random_secret_key())
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
-# TODO env
-SECRET_KEY = 'django-insecure-yvd5fi6_-cqgx3fxas*u%^y*n9w^45g()=q-4pqgaf-d&mvvia'
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = getenv('DEBUG', 'False') == 'True'
 DEBUG = True
 
-# TODO env
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+DB_TYPE = getenv('DB_TYPE', 'sqlite')
 
 # Application definition
 
@@ -32,6 +26,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
     'djoser',
     'users.apps.UsersConfig',
     'api.apps.ApiConfig',
@@ -42,6 +38,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -73,13 +70,24 @@ WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-# TODO env
-DATABASES = {
+if DB_TYPE == 'postgres':
+    DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': getenv('POSTGRES_DB', 'django'),
+        'USER': getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': getenv('POSTGRES_PASSWORD', ''),
+        'HOST': getenv('DB_HOST', ''),
+        'PORT': getenv('DB_PORT', 5432),
     }
 }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -122,7 +130,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR.parent / 'backend_static/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/user_media/'
+MEDIA_ROOT = BASE_DIR / 'user_media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -133,21 +141,32 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly', # isAuthenticatedOrReadOnly
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': DEFAULT_PAGE_SIZE,
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=TOKEN_LIFETIME),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(days=TOKEN_LIFETIME),
+#     'AUTH_HEADER_TYPES': ('Bearer',),
+# }
 
 DJOSER = {
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
-    }
+        'user': 'api.serializers.CustomUserSerializer',
+        'current_user': 'api.serializers.CustomUserSerializer',
+    },
+    'LOGIN_FIELD': 'email',
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+# ] 
+CORS_URLS_REGEX = r'^/api/.*$' 
