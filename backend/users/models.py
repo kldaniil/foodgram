@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     EmailValidator, MaxLengthValidator, MinLengthValidator, RegexValidator
@@ -89,3 +90,29 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='follower'
+    )
+    following = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='follows'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_followings'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user__exact=models.F('following')),
+                name='self_subscribe_not_allowed',
+
+            )
+        ]

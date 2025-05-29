@@ -1,10 +1,9 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.utils.text import Truncator
 
 
-User = get_user_model()
-
-
+SHORT_STRING = 25
 MAX_TAG_LENGTH = 32
 MAX_RECIPE_LENGTH = 256
 MAX_INGREDIENT_NAME_LENGTH = 128
@@ -19,16 +18,22 @@ class Tags(models.Model):
         verbose_name = 'Tag'
         verbose_name_plural = 'tags'
 
+    def __str__(self):
+        return Truncator(self.name).chars(SHORT_STRING)
+
 
 class Ingredients(models.Model):
     name = models.CharField('Название', max_length=MAX_INGREDIENT_NAME_LENGTH)
     measurement_unit = models.CharField(
-        'Единицы измерения', MAX_INGREDIENT_MEASURE_LENGTH
+        'Единицы измерения', max_length=MAX_INGREDIENT_MEASURE_LENGTH
     )
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'ингредиенты'
+    
+    def __str__(self):
+        return Truncator(self.name).chars(SHORT_STRING)
 
 
 class Recipes(models.Model):
@@ -41,23 +46,62 @@ class Recipes(models.Model):
         null=True,
         default=None
     )
-    cooking_time = models.PositiveSmallIntegerField('Время приготовления'),
-    tags = models.ManyToManyField(Tags, related_name='Recipes')
+    cooking_time = models.PositiveSmallIntegerField('Время приготовления')
+    tags = models.ManyToManyField(Tags, related_name='recipes', blank=True)
     ingredients = models.ManyToManyField(
-        'Ингредиенты',
+        Ingredients,
         through='RecipesIngredients',
+        related_name='recipes'
     )
     class Meta:
         ordering = ['id',]
         verbose_name = 'Рецепт'
         verbose_name_plural = 'рецепты'
 
+    def __str__(self):
+        return Truncator(self.name).chars(SHORT_STRING)
+
 
 class RecipesIngredients(models.Model):
-    recipes = models.ForeignKey(Recipes, on_delete=models.CASCADE)
-    ingredients = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipes, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField('Количество')
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
+
+
+class Favorites(models.Model):
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+        related_name='favorites_recipes'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_favorites_recipes'
+    )
+
+    class Meta:
+        ordering = ['id',]
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'избранные'
+
+
+class ShoppingList(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_shopping_list'
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+        related_name='recipes_shopping_list'
+    )
+    class Meta:
+        ordering = ['id',]
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
