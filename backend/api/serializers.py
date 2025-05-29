@@ -5,6 +5,11 @@ from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
+from recipes.models import (
+    Favorites, Ingredients, Recipes, RecipesIngredients, ShoppingList, Tags
+)
+from users.models import Follow
+
 
 User = get_user_model()
 
@@ -53,3 +58,9 @@ class AvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['avatar',]
+
+
+class IngredientsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredients
+        fields = '__all__'

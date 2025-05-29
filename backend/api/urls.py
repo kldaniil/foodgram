@@ -3,8 +3,11 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    AvatarViewSet
+    AvatarViewSet, IngrediensViewSet
 )
+
+v1_router = DefaultRouter()
+v1_router.register(r'ingredients', IngrediensViewSet, basename='ingredients')
 
 urlpatterns = [
     path('', include('djoser.urls')),
@@ -14,4 +17,5 @@ urlpatterns = [
         view=AvatarViewSet.as_view({'put': 'update', 'delete': 'destroy'}),
         name='Аватар'
     ),
+    path('', include(v1_router.urls)),
 ]

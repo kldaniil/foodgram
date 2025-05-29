@@ -11,8 +11,14 @@ class Command(BaseCommand):
         with open(path, encoding='utf-8') as file:
             ingredients = json.load(file)
             for ingredient in ingredients:
-                Ingredients.objects.get_or_create(
+                # Ingredients.objects.get_or_create(
+                #     name=ingredient['name'],
+                #     measurement_unit=ingredient['measurement_unit']
+                # )
+                    Ingredients.objects.update_or_create(
                     name=ingredient['name'],
-                    measurement_unit=['measurement_unit']
+                    defaults={
+                        'measurement_unit': ingredient['measurement_unit']
+                    }
                 )
         self.stdout.write(self.style.SUCCESS('Ингредиенты импортированы'))
