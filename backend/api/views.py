@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Case, IntegerField, Q, Value, When
 from django.shortcuts import render
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
@@ -10,6 +11,7 @@ from recipes.models import (
 )
 from users.models import Follow
 
+from .filters import IngredientSearchFilter
 from .serializers import (
     AvatarSerializer, IngredientsSerializer, CustomUserSerializer
     )
@@ -41,5 +43,26 @@ class AvatarViewSet(
 
 
 class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
+    # filter_backends = (IngredientSearchFilter,)
+    # search_fields = ('name',)
+    def get_queryset(self):
+        queryset = Ingredients.objects.all()
+
+        search = self.request.query_params.get('name')
+        if search:
+            queryset = queryset.filter(
+                name__icontains=search
+            ).annotate(
+                priority=Case(
+                    When(name__istartswith=search, then=Value(0)),
+                    When(
+                        Q(name__icontains=search)
+                        & ~Q(name__istartswith=search),
+                        then=Value(1)
+                        ),
+                    default=Value(2),
+                    output_field=IntegerField(),
+                )
+            ).order_by('priority', 'name')
+        return queryset
