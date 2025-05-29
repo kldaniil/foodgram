@@ -92,7 +92,7 @@ class CustomUser(AbstractUser):
         return self.username
 
 
-class Follow(models.Model):
+class Subscriptions(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

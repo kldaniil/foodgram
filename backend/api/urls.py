@@ -3,11 +3,18 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    AvatarViewSet, IngrediensViewSet
+    AvatarViewSet, IngrediensViewSet, FavoritesViewSet,
+    RecipesViewSet, SubscriptionsViewSet, TagsViewSet, 
 )
 
 v1_router = DefaultRouter()
 v1_router.register(r'ingredients', IngrediensViewSet, basename='ingredients')
+v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
+v1_router.register(r'tags', TagsViewSet, basename='tags')
+v1_router.register(
+    r'subscriptions', SubscriptionsViewSet, basename='subscriptions'
+)
+v1_router.register(r'favorites', FavoritesViewSet, basename='favorites')
 
 urlpatterns = [
     path('', include('djoser.urls')),

@@ -9,11 +9,12 @@ from rest_framework.response import Response
 from recipes.models import (
     Favorites, Ingredients, Recipes, RecipesIngredients, ShoppingList, Tags
 )
-from users.models import Follow
+from users.models import Subscriptions
 
 from .filters import IngredientSearchFilter
 from .serializers import (
-    AvatarSerializer, IngredientsSerializer, CustomUserSerializer
+    AvatarSerializer, IngredientsSerializer, FavoritesSerializer,
+    RecipesSerializer, SubscriptionsSerializer, TagsSerialiser,
     )
 
 User = get_user_model()
@@ -66,3 +67,23 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
                 )
             ).order_by('priority', 'name')
         return queryset
+
+
+class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tags.objects.all()
+    serializer_class = TagsSerialiser
+
+
+class SubscriptionsViewSet(viewsets.ModelViewSet):
+    queryset = Subscriptions.objects.all()
+    serializer_class = SubscriptionsSerializer
+
+
+class FavoritesViewSet(viewsets.ModelViewSet):
+    queryset = Favorites.objects.all()
+    serializer_class = FavoritesSerializer
+
+
+class RecipesViewSet(viewsets.ModelViewSet):
+    queryset = Recipes.objects.all()
+    serializer_class = RecipesSerializer

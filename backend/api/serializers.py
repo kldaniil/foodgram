@@ -8,7 +8,7 @@ from rest_framework import serializers
 from recipes.models import (
     Favorites, Ingredients, Recipes, RecipesIngredients, ShoppingList, Tags
 )
-from users.models import Follow
+from users.models import Subscriptions
 
 
 User = get_user_model()
@@ -63,4 +63,28 @@ class AvatarSerializer(serializers.ModelSerializer):
 class IngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredients
+        fields = '__all__'
+
+
+class TagsSerialiser(serializers.ModelSerializer):
+    class Meta:
+        model = Tags
+        fields = '__all__'
+
+
+class SubscriptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscriptions
+        fields = '__all__'
+
+
+class FavoritesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorites
+        fields = '__all__'
+
+
+class RecipesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipes
         fields = '__all__'
