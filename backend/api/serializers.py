@@ -163,9 +163,12 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        if Favorites.objects.filter(user=user, recipe=obj):
-            return True
-        return False
+        # if Favorites.objects.filter(user=user, recipe=obj):
+        #     return True
+        return (
+            user.is_authenticated
+            and Favorites.objects.filter(user=user, recipe=obj).exists()
+        )
 
 
     class Meta:

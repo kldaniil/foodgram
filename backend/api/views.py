@@ -13,7 +13,8 @@ from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
 from .serializers import (
-    AvatarSerializer, IngredientsSerializer, RecipeFavoritesSerializer,
+    AvatarSerializer, IngredientsSerializer, CustomUserSerializer,
+    RecipeFavoritesSerializer,
     RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
     TagsSerialiser,
     )
@@ -68,6 +69,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     
     def get_serializer_class(self):
@@ -86,4 +88,44 @@ class RecipesViewSet(viewsets.ModelViewSet):
             )
         elif request.method == 'DELETE':
             Favorites.objects.filter(user=request.user, recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class UsersRecipesViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = CustomUserSerializer
+
+#     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+#     def subscribe(self, request, pk=None):
+#         user = request.user
+#         subscribe = User.objects.get(id=pk)
+#         if self.method == 'POST':
+#             Subscriptions.objects.get_or_create(user=user, following=subscribe)
+#             return Response(
+#                 CustomUserSerializer(subscribe),
+#                 status=status.HTTP_201_CREATED
+#             )
+#         elif request.method == 'DELETE':
+#             Subscriptions.objects.filter(
+#                 user=user, following=subscribe
+#             ).delete()
+#             return Response(status=status.HTTP_204_NO_CONTENT)
+class UsersRecipesViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+
+    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    def subscribe(self, request, pk=None):
+        user = request.user
+        subscribe = User.objects.get(id=pk)
+        if request.method == 'POST':
+            Subscriptions.objects.get_or_create(user=user, following=subscribe)
+            return Response(
+                CustomUserSerializer(subscribe).data,
+                status=status.HTTP_201_CREATED
+            )
+        elif request.method == 'DELETE':
+            Subscriptions.objects.filter(
+                user=user, following=subscribe
+            ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

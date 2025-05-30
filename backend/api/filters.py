@@ -8,6 +8,7 @@ from recipes.models import Ingredients, Recipes
 class RecipesFilter(FilterSet):
     is_favorited = BooleanFilter(method='filter_is_favorited')
     tags = AllValuesMultipleFilter(field_name='tags__slug')
+    author = CharFilter(field_name='author__id')
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
