@@ -13,7 +13,7 @@ from recipes.models import (
 )
 from users.models import Subscriptions
 
-from .filters import RecipesFilter
+from .filters import IngredientsFilter, RecipesFilter
 from .serializers import (
     AvatarSerializer, IngredientsSerializer, RecipeFavoritesSerializer,
     RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
@@ -49,28 +49,31 @@ class AvatarViewSet(
 class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientsFilter
+    queryset = Ingredients.objects.all()
     # filter_backends = (IngredientSearchFilter,)
     # search_fields = ('name',)
-    def get_queryset(self):
-        queryset = Ingredients.objects.all()
+    # def get_queryset(self):
+    #     queryset = Ingredients.objects.all()
 
-        search = self.request.query_params.get('name')
-        if search:
-            queryset = queryset.filter(
-                name__icontains=search
-            ).annotate(
-                priority=Case(
-                    When(name__istartswith=search, then=Value(0)),
-                    When(
-                        Q(name__icontains=search)
-                        & ~Q(name__istartswith=search),
-                        then=Value(1)
-                        ),
-                    default=Value(2),
-                    output_field=IntegerField(),
-                )
-            ).order_by('priority', 'name')
-        return queryset
+    #     search = self.request.query_params.get('name')
+    #     if search:
+    #         queryset = queryset.filter(
+    #             name__icontains=search
+    #         ).annotate(
+    #             priority=Case(
+    #                 When(name__istartswith=search, then=Value(0)),
+    #                 When(
+    #                     Q(name__icontains=search)
+    #                     & ~Q(name__istartswith=search),
+    #                     then=Value(1)
+    #                     ),
+    #                 default=Value(2),
+    #                 output_field=IntegerField(),
+    #             )
+    #         ).order_by('priority', 'name')
+    #     return queryset
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
