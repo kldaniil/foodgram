@@ -84,9 +84,20 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 
-class IngredientsAmountSerializer(serializers.Serializer):
+class IngredientsAmountWriteSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
+
+
+class IngredientsAmountReadSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+    class Meta:
+        model = RecipesIngredients
+        fields = ['id', 'name', 'measurement_unit', 'amount']
 
 
 class RecipeFavoritesSerializer(serializers.ModelSerializer):
@@ -98,7 +109,7 @@ class RecipeFavoritesSerializer(serializers.ModelSerializer):
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
     image = ImageField()
-    ingredients = IngredientsAmountSerializer(many=True)
+    ingredients = IngredientsAmountWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset = Tags.objects.all(), many=True
     )
@@ -152,7 +163,11 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 class RecipesReadSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer()
     tags = TagsSerialiser(many=True)
-    ingredients = serializers.SerializerMethodField()
+    # ingredients = serializers.SerializerMethodField()
+    ingredients = IngredientsAmountReadSerializer(
+        many=True,
+        source='recipe_ingredients'
+    )
     is_favorited = serializers.SerializerMethodField()
 
     def get_is_favorited(self, obj):
@@ -161,18 +176,18 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             return True
         return False
 
-    def get_ingredients(self, obj):
-        ingredients_list = []
-        for item in obj.recipe_ingredients.all():
-            ingredients_list.append(
-                {
-                    'id': item.ingredient.id,
-                    'name': item.ingredient.name,
-                    'measurement_unit': item.ingredient.measurement_unit,
-                    'amount': item.amount,
-                }
-            )
-        return ingredients_list
+    # def get_ingredients(self, obj):
+    #     ingredients_list = []
+    #     for item in obj.recipe_ingredients.all():
+    #         ingredients_list.append(
+    #             {
+    #                 'id': item.ingredient.id,
+    #                 'name': item.ingredient.name,
+    #                 'measurement_unit': item.ingredient.measurement_unit,
+    #                 'amount': item.amount,
+    #             }
+    #         )
+    #     return ingredients_list
 
     class Meta:
         model = Recipes
