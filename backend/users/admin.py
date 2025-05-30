@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import CustomUser
+from .models import Subscriptions, CustomUser
 
 
 UserAdmin.fieldsets += (
@@ -9,3 +9,4 @@ UserAdmin.fieldsets += (
 )
 
 admin.site.register(CustomUser, UserAdmin)
+admin.site.register(Subscriptions)

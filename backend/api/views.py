@@ -13,8 +13,9 @@ from users.models import Subscriptions
 
 from .filters import IngredientSearchFilter
 from .serializers import (
-    AvatarSerializer, IngredientsSerializer, FavoritesSerializer,
-    RecipesSerializer, SubscriptionsSerializer, TagsSerialiser,
+    AvatarSerializer, IngredientsSerializer, FavoritesSerializer, 
+    RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
+    TagsSerialiser,
     )
 
 User = get_user_model()
@@ -45,6 +46,7 @@ class AvatarViewSet(
 
 class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
+    pagination_class = None
     # filter_backends = (IngredientSearchFilter,)
     # search_fields = ('name',)
     def get_queryset(self):
@@ -72,18 +74,25 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tags.objects.all()
     serializer_class = TagsSerialiser
+    pagination_class = None
 
 
 class SubscriptionsViewSet(viewsets.ModelViewSet):
     queryset = Subscriptions.objects.all()
     serializer_class = SubscriptionsSerializer
+    pagination_class = None
 
 
 class FavoritesViewSet(viewsets.ModelViewSet):
     queryset = Favorites.objects.all()
     serializer_class = FavoritesSerializer
+    pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
-    serializer_class = RecipesSerializer
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return RecipesWriteSerializer
+        return RecipesReadSerializer

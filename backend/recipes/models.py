@@ -53,6 +53,12 @@ class Recipes(models.Model):
         through='RecipesIngredients',
         related_name='recipes'
     )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='recipes',
+        verbose_name='Автор'
+    )
     class Meta:
         ordering = ['id',]
         verbose_name = 'Рецепт'
@@ -63,9 +69,13 @@ class Recipes(models.Model):
 
 
 class RecipesIngredients(models.Model):
-    recipe = models.ForeignKey(Recipes, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
-    quantity = models.PositiveSmallIntegerField('Количество')
+    recipe = models.ForeignKey(
+        Recipes, on_delete=models.CASCADE, related_name='recipe_ingredients'
+    )
+    ingredient = models.ForeignKey(
+        Ingredients, on_delete=models.CASCADE, related_name='ingredients_recipe'
+    )
+    amount = models.PositiveSmallIntegerField('Количество')
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент рецепта'

@@ -14,7 +14,7 @@ from users.models import Subscriptions
 User = get_user_model()
 
 
-class AvatarField(serializers.ImageField):
+class ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, image_data = data.split(';base64,')
@@ -37,7 +37,7 @@ class CustomUserSerializer(UserSerializer):
         'check_subscription',
         read_only=True
     )
-    avatar = AvatarField(required=False, allow_null=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
 
     def get_avatar(self, obj):
         pass
@@ -54,7 +54,7 @@ class CustomUserSerializer(UserSerializer):
 
 
 class AvatarSerializer(serializers.ModelSerializer):
-    avatar = AvatarField(required=False, allow_null=True)
+    avatar = ImageField(required=False, allow_null=True)
     class Meta:
         model = User
         fields = ['avatar',]
@@ -84,7 +84,82 @@ class FavoritesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RecipesSerializer(serializers.ModelSerializer):
+class IngredientsAmountSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    amount = serializers.IntegerField()
+
+
+class RecipesWriteSerializer(serializers.ModelSerializer):
+    image = ImageField()
+    ingredients = IngredientsAmountSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset = Tags.objects.all(), many=True
+    )
+    author = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    def save_ingredients_and_amount(self, recipe, ingredients):
+        save_list = []
+        for ingredient in ingredients:
+            ingredient_object = Ingredients.objects.get(id=ingredient['id'])
+            save_list.append(
+                RecipesIngredients(
+                    recipe=recipe,
+                    ingredient=ingredient_object,
+                    amount=ingredient['amount']
+                )
+            )
+        RecipesIngredients.objects.bulk_create(save_list)
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['author'] = request.user
+        ingredients = validated_data.pop('ingredients')
+        print("ingredients in create:", ingredients)
+        tags = validated_data.pop('tags')
+        recipe = Recipes.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.save_ingredients_and_amount(recipe, ingredients)
+        return recipe
+    
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        print("ingredients in update:", ingredients)
+        tags = validated_data.pop('tags')
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        instance.tags.set(tags)
+        RecipesIngredients.objects.filter(recipe=instance).delete()
+        self.save_ingredients_and_amount(instance, ingredients)
+        return instance
+    
+    def to_representation(self, instance):
+        read_serializer = RecipesReadSerializer(instance, context=self.context)
+        return read_serializer.data
+
+    class Meta:
+        model = Recipes
+        fields = '__all__'
+
+
+class RecipesReadSerializer(serializers.ModelSerializer):
+    author = CustomUserSerializer()
+    tags = TagsSerialiser(many=True)
+    ingredients = serializers.SerializerMethodField()
+
+    def get_ingredients(self, obj):
+        ingredients_list = []
+        for item in obj.recipe_ingredients.all():
+            ingredients_list.append(
+                {
+                    'id': item.ingredient.id,
+                    'name': item.ingredient.name,
+                    'measurement_unit': item.ingredient.measurement_unit,
+                    'amount': item.amount,
+                }
+            )
+        return ingredients_list
+
     class Meta:
         model = Recipes
         fields = '__all__'
