@@ -4,4 +4,5 @@ env
 .env
 .git
 db.sqlite3
+backend/user_media
 user_media
