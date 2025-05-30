@@ -132,7 +132,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         validated_data['author'] = request.user
         ingredients = validated_data.pop('ingredients')
-        print("ingredients in create:", ingredients)
         tags = validated_data.pop('tags')
         recipe = Recipes.objects.create(**validated_data)
         recipe.tags.set(tags)
@@ -141,7 +140,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients')
-        print("ingredients in update:", ingredients)
         tags = validated_data.pop('tags')
         for key, value in validated_data.items():
             setattr(instance, key, value)

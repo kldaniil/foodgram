@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
 )
@@ -12,7 +13,7 @@ from recipes.models import (
 )
 from users.models import Subscriptions
 
-from .filters import IngredientSearchFilter
+from .filters import RecipesFilter
 from .serializers import (
     AvatarSerializer, IngredientsSerializer, RecipeFavoritesSerializer,
     RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
@@ -84,14 +85,23 @@ class SubscriptionsViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 
-# class FavoritesViewSet(viewsets.ModelViewSet):
-#     queryset = Favorites.objects.all()
-#     serializer_class = FavoritesSerializer
-#     pagination_class = None
-
-
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipesFilter
+
+    # def get_queryset(self):
+    #     queryset = Recipes.objects.all()
+    #     user = self.request.user
+    #     favorites_filter = self.request.query_params.get('is_favorited')
+    #     tags_filter_list = self.request.query_params.getlist('tags')
+    #     if favorites_filter == '1':
+    #         queryset = queryset.filter(favorites_recipes__user=user)
+    #     if len(tags_filter_list) > 0:
+    #         queryset = queryset.filter(
+    #             tags__slug__in=tags_filter_list
+    #         ).distinct()
+    #     return queryset
     
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
