@@ -78,15 +78,22 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FavoritesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Favorites
-        fields = '__all__'
+# class FavoritesSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Favorites
+#         fields = '__all__'
 
 
 class IngredientsAmountSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
+
+
+class RecipeFavoritesSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField()
+    class Meta:
+        model = Recipes
+        fields = ['id', 'name', 'image', 'cooking_time']
 
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
@@ -146,6 +153,13 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer()
     tags = TagsSerialiser(many=True)
     ingredients = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        if Favorites.objects.filter(user=user, recipe=obj):
+            return True
+        return False
 
     def get_ingredients(self, obj):
         ingredients_list = []

@@ -4,6 +4,7 @@ from django.shortcuts import render
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
 )
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from recipes.models import (
@@ -13,7 +14,7 @@ from users.models import Subscriptions
 
 from .filters import IngredientSearchFilter
 from .serializers import (
-    AvatarSerializer, IngredientsSerializer, FavoritesSerializer, 
+    AvatarSerializer, IngredientsSerializer, RecipeFavoritesSerializer,
     RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
     TagsSerialiser,
     )
@@ -83,10 +84,10 @@ class SubscriptionsViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 
-class FavoritesViewSet(viewsets.ModelViewSet):
-    queryset = Favorites.objects.all()
-    serializer_class = FavoritesSerializer
-    pagination_class = None
+# class FavoritesViewSet(viewsets.ModelViewSet):
+#     queryset = Favorites.objects.all()
+#     serializer_class = FavoritesSerializer
+#     pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
@@ -96,3 +97,16 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return RecipesWriteSerializer
         return RecipesReadSerializer
+    
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def favorite(self, request, pk=None):
+        recipe = self.get_object()
+        if request.method == 'POST':
+            Favorites.objects.get_or_create(user=request.user, recipe=recipe)
+            return Response(
+                RecipeFavoritesSerializer(recipe).data,
+                status=status.HTTP_201_CREATED
+            )
+        elif request.method == 'DELETE':
+            Favorites.objects.filter(user=request.user, recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

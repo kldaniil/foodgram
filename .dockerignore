@@ -4,3 +4,4 @@ env
 .env
 .git
 db.sqlite3
+user_media
