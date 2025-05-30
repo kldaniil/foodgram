@@ -78,12 +78,6 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class FavoritesSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Favorites
-#         fields = '__all__'
-
-
 class IngredientsAmountWriteSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
@@ -161,7 +155,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 class RecipesReadSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer()
     tags = TagsSerialiser(many=True)
-    # ingredients = serializers.SerializerMethodField()
     ingredients = IngredientsAmountReadSerializer(
         many=True,
         source='recipe_ingredients'
@@ -174,18 +167,6 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             return True
         return False
 
-    # def get_ingredients(self, obj):
-    #     ingredients_list = []
-    #     for item in obj.recipe_ingredients.all():
-    #         ingredients_list.append(
-    #             {
-    #                 'id': item.ingredient.id,
-    #                 'name': item.ingredient.name,
-    #                 'measurement_unit': item.ingredient.measurement_unit,
-    #                 'amount': item.amount,
-    #             }
-    #         )
-    #     return ingredients_list
 
     class Meta:
         model = Recipes

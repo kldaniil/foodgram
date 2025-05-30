@@ -13,9 +13,6 @@ v1_router.register(r'tags', TagsViewSet, basename='tags')
 v1_router.register(
     r'users/subscriptions', SubscriptionsViewSet, basename='subscriptions'
 )
-# v1_router.register(
-#     r'recipes/(?P<recipe_id>\d+)/favorites', FavoritesViewSet, basename='favorites'
-# )
 v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
 
 urlpatterns = [

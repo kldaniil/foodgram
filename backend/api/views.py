@@ -1,6 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Case, IntegerField, Q, Value, When
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
@@ -52,29 +50,7 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientsFilter
     queryset = Ingredients.objects.all()
-    # filter_backends = (IngredientSearchFilter,)
-    # search_fields = ('name',)
-    # def get_queryset(self):
-    #     queryset = Ingredients.objects.all()
-
-    #     search = self.request.query_params.get('name')
-    #     if search:
-    #         queryset = queryset.filter(
-    #             name__icontains=search
-    #         ).annotate(
-    #             priority=Case(
-    #                 When(name__istartswith=search, then=Value(0)),
-    #                 When(
-    #                     Q(name__icontains=search)
-    #                     & ~Q(name__istartswith=search),
-    #                     then=Value(1)
-    #                     ),
-    #                 default=Value(2),
-    #                 output_field=IntegerField(),
-    #             )
-    #         ).order_by('priority', 'name')
-    #     return queryset
-
+ 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tags.objects.all()
@@ -93,18 +69,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
 
-    # def get_queryset(self):
-    #     queryset = Recipes.objects.all()
-    #     user = self.request.user
-    #     favorites_filter = self.request.query_params.get('is_favorited')
-    #     tags_filter_list = self.request.query_params.getlist('tags')
-    #     if favorites_filter == '1':
-    #         queryset = queryset.filter(favorites_recipes__user=user)
-    #     if len(tags_filter_list) > 0:
-    #         queryset = queryset.filter(
-    #             tags__slug__in=tags_filter_list
-    #         ).distinct()
-    #     return queryset
     
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
