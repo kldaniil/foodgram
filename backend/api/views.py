@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
 )
@@ -87,15 +88,39 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UsersRecipesViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+# class UsersRecipesViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = CustomUserSerializer
+
+
+#     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+#     def subscribe(self, request, pk=None):
+#         user = request.user
+#         subscribe = User.objects.get(id=pk)
+#         if request.method == 'POST':
+#             Subscriptions.objects.get_or_create(user=user, following=subscribe)
+#             return Response(
+#                 CustomUserSerializer(subscribe).data,
+#                 status=status.HTTP_201_CREATED
+#             )
+#         elif request.method == 'DELETE':
+#             Subscriptions.objects.filter(
+#                 user=user, following=subscribe
+#             ).delete()
+#             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomUsersViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
+    permission_classes = (permissions.AllowAny,)
+    pagination_class = CustomPagination
+    queryset = User.objects.all()
 
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, id=None, **kwargs):
         user = request.user
-        subscribe = User.objects.get(id=pk)
+        subscribe = User.objects.get(id=id)
         if request.method == 'POST':
             Subscriptions.objects.get_or_create(user=user, following=subscribe)
             return Response(
@@ -107,14 +132,28 @@ class UsersRecipesViewSet(viewsets.ModelViewSet):
                 user=user, following=subscribe
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(
+        detail=False, methods=['get',],
+        url_path='subscriptions',
+        permission_classes=(permissions.AllowAny,)
+    )
+    def subscriptions(self, request):
+        
+        user = request.user
+        queryset = User.objects.filter(followers__user=user)
+        page = self.paginate_queryset(queryset)
+        serializer = SubscriptionsSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
 
-class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CustomUserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+# class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
+#     serializer_class = CustomUserSerializer
+#     permission_classes = (permissions.IsAuthenticated,)
 
-    def get_queryset(self):
-        return User.objects.filter(followers__user=self.request.user)
+#     def get_queryset(self):
+#         print('!!!!!!!!!!!!!!SUBSCRIPTIONS METHOD CALLED')
+#         return User.objects.filter(followers__user=self.request.user)
     # @action(
     #         detail=False, methods=['get',],
     #         url_path='subscriptions',

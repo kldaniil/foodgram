@@ -72,13 +72,6 @@ class TagsSerialiser(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SubscriptionsSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = Subscriptions
-        fields = '__all__'
-
-
 class IngredientsAmountWriteSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
@@ -153,7 +146,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RecipesReadSerializer(serializers.ModelSerializer):
+class RecipesReadSerializer(RecipeFavoritesSerializer):
     author = CustomUserSerializer()
     tags = TagsSerialiser(many=True)
     ingredients = IngredientsAmountReadSerializer(
@@ -164,8 +157,6 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        # if Favorites.objects.filter(user=user, recipe=obj):
-        #     return True
         return (
             user.is_authenticated
             and Favorites.objects.filter(user=user, recipe=obj).exists()
@@ -175,3 +166,27 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipes
         fields = '__all__'
+
+
+class SubscriptionsSerializer(serializers.ModelSerializer):
+    recipes = RecipeFavoritesSerializer(read_only=True, many=True)
+    recipes_count = serializers.SerializerMethodField()
+    avatar = serializers.ImageField()
+    is_favorited = serializers.SerializerMethodField
+    is_subscribed = serializers.SerializerMethodField
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        return (
+            user.is_authenticated
+            and Favorites.objects.filter(user=user, recipe=obj).exists()
+        )
+    def get_recipes_count(self, obj):
+        return
+    class Meta:
+        model = User
+        # fields = (
+        #     'id', 'email', 'username', 'first_name', 'last_name',
+        #     'recipes', 'avatar', 'recipes_count', 'is_favorited'
+        # )
+        fields = '__all__'
+# TODO привести поля в порядок. Разобраться с возможно лишними сериалайзерами
