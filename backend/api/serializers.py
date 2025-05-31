@@ -73,6 +73,7 @@ class TagsSerialiser(serializers.ModelSerializer):
 
 
 class SubscriptionsSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Subscriptions
         fields = '__all__'

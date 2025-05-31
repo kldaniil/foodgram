@@ -12,6 +12,7 @@ from recipes.models import (
 from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
+from .pagination import CustomPagination
 from .serializers import (
     AvatarSerializer, IngredientsSerializer, CustomUserSerializer,
     RecipeFavoritesSerializer,
@@ -59,17 +60,12 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 
-class SubscriptionsViewSet(viewsets.ModelViewSet):
-    queryset = Subscriptions.objects.all()
-    serializer_class = SubscriptionsSerializer
-    pagination_class = None
-
-
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    pagination_class = CustomPagination
 
     
     def get_serializer_class(self):
@@ -91,28 +87,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# class UsersRecipesViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = CustomUserSerializer
-
-#     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-#     def subscribe(self, request, pk=None):
-#         user = request.user
-#         subscribe = User.objects.get(id=pk)
-#         if self.method == 'POST':
-#             Subscriptions.objects.get_or_create(user=user, following=subscribe)
-#             return Response(
-#                 CustomUserSerializer(subscribe),
-#                 status=status.HTTP_201_CREATED
-#             )
-#         elif request.method == 'DELETE':
-#             Subscriptions.objects.filter(
-#                 user=user, following=subscribe
-#             ).delete()
-#             return Response(status=status.HTTP_204_NO_CONTENT)
 class UsersRecipesViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
+
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribe(self, request, pk=None):
@@ -129,3 +107,24 @@ class UsersRecipesViewSet(viewsets.ModelViewSet):
                 user=user, following=subscribe
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CustomUserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return User.objects.filter(followers__user=self.request.user)
+    # @action(
+    #         detail=False, methods=['get',],
+    #         url_path='subscriptions',
+    #         permission_classes=(permissions.AllowAny,)
+    #     )
+    # def subscriptions(self, request):
+    #     print('!!!!!!!!!!!!!!SUBSCRIPTIONS METHOD CALLED')
+    #     user = request.user
+    #     queryset = User.objects.filter(followers__user=user)
+    #     return Response(
+    #         SubscriptionsSerializer(queryset, many=True).data,
+    #         status=status.HTTP_200_OK
+    #     )

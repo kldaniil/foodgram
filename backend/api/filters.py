@@ -1,8 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Case, IntegerField, Q, Value, When
 from django_filters.rest_framework import (
     AllValuesMultipleFilter, BooleanFilter, CharFilter, FilterSet
 )
 from recipes.models import Ingredients, Recipes
+
+
+User = get_user_model()
 
 
 class RecipesFilter(FilterSet):
@@ -49,3 +53,9 @@ class IngredientsFilter(FilterSet):
     class Meta:
         model = Ingredients
         fields = ('name',)
+
+
+# class UserSubscriptionsFilter(FilterSet):
+#     class Meta:
+#         model = User
+#         fields = ('id',)

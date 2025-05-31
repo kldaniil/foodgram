@@ -10,12 +10,12 @@ from .views import (
 v1_router = DefaultRouter()
 v1_router.register(r'ingredients', IngrediensViewSet, basename='ingredients')
 v1_router.register(r'tags', TagsViewSet, basename='tags')
-v1_router.register(
-    r'users/subscriptions', SubscriptionsViewSet, basename='subscriptions'
-)
 v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
 v1_router.register(
     r'users', UsersRecipesViewSet, basename='subscribe'
+)
+v1_router.register(
+    r'users/subscriptions', SubscriptionsViewSet, basename='subscriptions'
 )
 
 urlpatterns = [
@@ -28,3 +28,5 @@ urlpatterns = [
     ),
     path('', include(v1_router.urls)),
 ]
+for url in v1_router.urls:
+    print(url)

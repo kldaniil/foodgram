@@ -3,7 +3,7 @@ from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
-DEFAULT_PAGE_SIZE = 10
+# DEFAULT_PAGE_SIZE = 6
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -147,8 +147,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': DEFAULT_PAGE_SIZE,
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': DEFAULT_PAGE_SIZE,
 }
 
 # SIMPLE_JWT = {
