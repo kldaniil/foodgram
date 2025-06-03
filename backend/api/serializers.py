@@ -154,13 +154,20 @@ class RecipesReadSerializer(RecipeFavoritesSerializer):
         source='recipe_ingredients'
     )
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
-    def get_is_favorited(self, obj):
+    def make_bool_field(self, obj, model):
         user = self.context.get('request').user
         return (
             user.is_authenticated
-            and Favorites.objects.filter(user=user, recipe=obj).exists()
+            and model.objects.filter(user=user, recipe=obj).exists()
         )
+
+    def get_is_in_shopping_cart(self, obj):
+        return self.make_bool_field(obj, ShoppingList)
+
+    def get_is_favorited(self, obj):
+        return self.make_bool_field(obj, Favorites)
 
 
     class Meta:

@@ -13,14 +13,33 @@ class RecipesFilter(FilterSet):
     is_favorited = BooleanFilter(method='filter_is_favorited')
     tags = AllValuesMultipleFilter(field_name='tags__slug')
     author = CharFilter(field_name='author__id')
+    is_in_shopping_cart = BooleanFilter(method='filter_is_in_shopping_cart')
 
-    def filter_is_favorited(self, queryset, name, value):
+    def filter_favorites_or_shopping(self, queryset, name, value, filter_field):
         user = self.request.user
         if not user.is_authenticated and value:
             return queryset.none()
         if value:
-            return queryset.filter(favorites_recipes__user=user)
+            filter_dict = {filter_field: user}
+            return queryset.filter(**filter_dict)
         return queryset
+
+    def filter_is_favorited(self, queryset, name, value):
+        return (
+            self.filter_favorites_or_shopping(
+                queryset, name, value,
+                'favorites_recipes__user'
+            )
+        )
+    
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        return (
+            self.filter_favorites_or_shopping(
+                queryset, name, value,
+                'recipes_user_shopping_list__user'
+            )
+        )
+    
 
     class Meta:
         model = Recipes

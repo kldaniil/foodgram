@@ -109,7 +109,7 @@ class ShoppingList(models.Model):
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
-        related_name='recipes_shopping_list'
+        related_name='recipes_user_shopping_list'
     )
     class Meta:
         ordering = ['id',]

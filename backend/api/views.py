@@ -74,40 +74,25 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return RecipesWriteSerializer
         return RecipesReadSerializer
     
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
-    def favorite(self, request, pk=None):
+    def add_recipe_to_cart_or_favorites(self, request, model):
         recipe = self.get_object()
         if request.method == 'POST':
-            Favorites.objects.get_or_create(user=request.user, recipe=recipe)
+            model.objects.get_or_create(user=request.user, recipe=recipe)
             return Response(
                 RecipeFavoritesSerializer(recipe).data,
                 status=status.HTTP_201_CREATED
             )
         elif request.method == 'DELETE':
-            Favorites.objects.filter(user=request.user, recipe=recipe).delete()
+            model.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def favorite(self, request, pk=None):
+        return self.add_recipe_to_cart_or_favorites(request, Favorites)
 
-
-# class UsersRecipesViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = CustomUserSerializer
-
-
-#     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-#     def subscribe(self, request, pk=None):
-#         user = request.user
-#         subscribe = User.objects.get(id=pk)
-#         if request.method == 'POST':
-#             Subscriptions.objects.get_or_create(user=user, following=subscribe)
-#             return Response(
-#                 CustomUserSerializer(subscribe).data,
-#                 status=status.HTTP_201_CREATED
-#             )
-#         elif request.method == 'DELETE':
-#             Subscriptions.objects.filter(
-#                 user=user, following=subscribe
-#             ).delete()
-#             return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    def shopping_cart(self, requst, pk=None):
+        return self.add_recipe_to_cart_or_favorites(requst, ShoppingList)
 
 
 class CustomUsersViewSet(UserViewSet):
