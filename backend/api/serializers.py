@@ -29,7 +29,7 @@ class ImageField(serializers.ImageField):
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ['first_name', 'last_name', 'username', 'email', 'password']
+        fields = ['id', 'first_name', 'last_name', 'username', 'email', 'password']
 
 
 class CustomUserSerializer(UserSerializer):
@@ -39,11 +39,12 @@ class CustomUserSerializer(UserSerializer):
     )
     avatar = serializers.ImageField(required=False, allow_null=True)
 
-    def get_avatar(self, obj):
-        pass
 
     def check_subscription(self, obj):
-        pass
+        user = self.context.get('request').user
+        if not user.is_authenticated:
+            return False
+        return obj.followers.filter(user=user).exists()
 
     class Meta(UserSerializer.Meta):
         model = User
@@ -54,7 +55,7 @@ class CustomUserSerializer(UserSerializer):
 
 
 class AvatarSerializer(serializers.ModelSerializer):
-    avatar = ImageField(required=False, allow_null=True)
+    avatar = ImageField(required=True, allow_null=False)
     class Meta:
         model = User
         fields = ['avatar',]

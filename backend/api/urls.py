@@ -11,6 +11,7 @@ v1_router = DefaultRouter()
 v1_router.register(r'ingredients', IngrediensViewSet, basename='ingredients')
 v1_router.register(r'tags', TagsViewSet, basename='tags')
 v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
+# v1_router.register(r'users/me/avatar', AvatarViewSet, basename='avatar')
 v1_router.register(r'users', CustomUsersViewSet, basename='users')
 
 urlpatterns = [

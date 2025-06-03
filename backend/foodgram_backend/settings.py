@@ -163,9 +163,10 @@ DJOSER = {
         'current_user': 'api.serializers.CustomUserSerializer',
     },
     'LOGIN_FIELD': 'email',
-    # 'PERMISSIONS': {
-    #     'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly']
-    # }
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'current_user': ['rest_framework.permissions.IsAuthenticated'],
+    }
 }
 
 CORS_ORIGIN_ALLOW_ALL = True

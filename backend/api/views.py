@@ -31,19 +31,25 @@ class AvatarViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+# class AvatarViewSet(
+#     viewsets.ModelViewSet
+# ):
     serializer_class = AvatarSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
+        # user = self.request.user
+        # if not user.is_authenticated:
+        #     raise exceptions.NotAuthenticated()
         return self.request.user
     
     def destroy(self, request, *args, **kwargs):
-        user = request.user
+        user = self.get_object()
         user.avatar.delete(save=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     def update(self, request, *args, **kwargs):
-        user = request.user
+        user = self.get_object()
         if user.avatar:
             user.avatar.delete(save=False)
         return super().update(request, *args, **kwargs)
@@ -118,13 +124,21 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 class CustomUsersViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = CustomPagination
     queryset = User.objects.all()
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return (permissions.IsAuthenticatedOrReadOnly(),)
+        return super().get_permissions()
+
+    @action(detail=False, methods=['get'], url_path='me', permission_classes=(permissions.IsAuthenticated,))
+    def me(self, request):
+        return Response(self.get_serializer(request.user).data)
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-    def subscribe(self, request, id=None, **kwargs):
+    def subscribe(self, request, id=None):
         user = request.user
         subscribe = User.objects.get(id=id)
         if request.method == 'POST':
