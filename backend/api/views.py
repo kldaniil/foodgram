@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse
 from djoser.views import UserViewSet
 from rest_framework import (
     exceptions, filters, generics, mixins, permissions, status, viewsets
@@ -93,6 +95,25 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, requst, pk=None):
         return self.add_recipe_to_cart_or_favorites(requst, ShoppingList)
+    
+    @action(detail=False, methods=['get',], url_path='download_shopping_cart')
+    def download_shopping_cart(self, requset):
+        user = requset.user
+        ingredients = Ingredients.objects.filter(
+            ingredients_recipe__recipe__recipes_user_shopping_list__user=user
+        ).values('name', 'measurement_unit').annotate(
+            amount=Sum('ingredients_recipe__amount')
+        ).order_by('name',)
+        shopping_list = []
+        for list_item in ingredients:
+            shopping_list.append(f'{list_item["name"]}: {list_item["measurement_unitamount"]} {list_item[""]} \n')
+        # shopping_list = IngredientsSerializer(ingredients).data
+        response = HttpResponse(
+            shopping_list,
+            content_type='text/plain; charset=utf-8'
+        )
+        response['Content-Disposotion'] = 'attachment; filename="shopping_cart"'
+        return response
 
 
 class CustomUsersViewSet(UserViewSet):
