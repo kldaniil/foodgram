@@ -1,10 +1,16 @@
+import io
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse
+from django.conf import settings
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import redirect
 # from django.urls import reverse
 from djoser.views import UserViewSet
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from rest_framework import (
     exceptions, mixins,
     permissions, status, viewsets
@@ -28,6 +34,13 @@ from .serializers import (
     SubscriptionsSerializer, TagsSerialiser,
     )
 from .utils import generate_short_link
+
+
+PDF_START_X = 40
+PDF_START_Y = 800
+PDF_FONT = 'Carlito'
+PDF_FONT_SIZE = 14
+PDF_HEADER_FONT_SIZE = 18
 
 User = get_user_model()
 
@@ -128,6 +141,26 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return self.add_recipe_to_cart_or_favorites(requst, ShoppingList)
     
     @action(detail=False, methods=['get',], url_path='download_shopping_cart')
+    # def download_shopping_cart(self, requset):
+    #     user = requset.user
+    #     ingredients = Ingredients.objects.filter(
+    #         ingredients_recipe__recipe__recipes_user_shopping_list__user=user
+    #     ).values('name', 'measurement_unit').annotate(
+    #         amount=Sum('ingredients_recipe__amount')
+    #     ).order_by('name',)
+    #     shopping_list = []
+    #     for list_item in ingredients:
+    #         shopping_list.append(
+    #             f'{list_item["name"]}: '
+    #             f'{list_item["measurement_unit"]} '
+    #             f'{list_item["amount"]} \n'
+    #         )
+    #     response = HttpResponse(
+    #         shopping_list,
+    #         content_type='text/plain; charset=utf-8'
+    #     )
+    #     response['Content-Disposition'] = 'attachment; filename="shopping_cart"'
+    #     return response
     def download_shopping_cart(self, requset):
         user = requset.user
         ingredients = Ingredients.objects.filter(
@@ -136,17 +169,36 @@ class RecipesViewSet(viewsets.ModelViewSet):
             amount=Sum('ingredients_recipe__amount')
         ).order_by('name',)
         shopping_list = []
-        for list_item in ingredients:
-            shopping_list.append(
-                f'{list_item["name"]}: '
-                f'{list_item["measurement_unit"]} '
-                f'{list_item["amount"]} \n'
-            )
-        response = HttpResponse(
-            shopping_list,
-            content_type='text/plain; charset=utf-8'
+
+        x = PDF_START_X
+        y = PDF_START_Y
+        font_path = str(
+            settings.BASE_DIR.parent / 'fonts' / 'Carlito-Regular.ttf'
         )
-        response['Content-Disposotion'] = 'attachment; filename="shopping_cart"'
+        pdfmetrics.registerFont(TTFont(PDF_FONT, font_path))
+        buffer = io.BytesIO()
+        pdf = canvas.Canvas(buffer)
+        pdf.setTitle('Мой список покупок')
+        pdf.setFont(PDF_FONT, PDF_HEADER_FONT_SIZE)
+        pdf.drawString(x, y, 'Список покупок:')
+        y -= 10  # отступ от заголовка
+        pdf.setFont(PDF_FONT, PDF_FONT_SIZE)
+        for item in ingredients:
+            y -= 20
+            pdf.drawString(
+                x, y,
+                f'- {item["name"]} {item["amount"]} {item["measurement_unit"]}'
+            )
+        
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer,
+            content_type='application/pdf;'
+        )
+        response['Content-Disposition'] = 'attachment; filename="shopping_cart.pdf"'
         return response
     
     @action(detail=True, methods=['get',], url_path='get-link')
@@ -246,6 +298,3 @@ class CustomUsersViewSet(UserViewSet):
             page, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
-
-    
-# TODO short_link
