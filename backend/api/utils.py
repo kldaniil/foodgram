@@ -8,9 +8,4 @@ def generate_short_link(length=SHORT_LINK_LENGTH):
     return (
         ''.join(random.choices(string.ascii_letters + string.digits, k=length))
     )
-
-# def get_link(link):
-#     pass
-
-# def get_short_link():
-#     pass
+def foo(): return  1
