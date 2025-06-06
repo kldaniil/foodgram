@@ -88,20 +88,42 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def add_recipe_to_cart_or_favorites(self, request, model):
         recipe = self.get_object()
         if request.method == 'POST':
-            model.objects.get_or_create(user=request.user, recipe=recipe)
+            _, created = model.objects.get_or_create(
+                user=request.user,
+                recipe=recipe
+            )
+            if not created:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             return Response(
                 RecipeFavoritesSerializer(recipe).data,
                 status=status.HTTP_201_CREATED
             )
         elif request.method == 'DELETE':
+            if (
+                not model.objects
+                .filter(user=request.user, recipe=recipe)
+                .exists()
+            ):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            
             model.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
     
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    @action(
+            detail=True,
+            methods=['post', 'delete'],
+            url_path='favorite',
+            permission_classes=(permissions.IsAuthenticated,)
+        )
     def favorite(self, request, pk=None):
         return self.add_recipe_to_cart_or_favorites(request, Favorites)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    @action(
+            detail=True,
+            methods=['post', 'delete'],
+            url_path='shopping_cart',
+            permission_classes=(permissions.IsAuthenticated,)
+        )
     def shopping_cart(self, requst, pk=None):
         return self.add_recipe_to_cart_or_favorites(requst, ShoppingList)
     
@@ -130,7 +152,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get',], url_path='get-link')
     def get_link(self, request, pk=None):
         recipe = self.get_object()
-        link, created = Links.objects.get_or_create(
+        link, _ = Links.objects.get_or_create(
             recipe=recipe,
             defaults={'link': generate_short_link()}
         )
@@ -177,6 +199,13 @@ class CustomUsersViewSet(UserViewSet):
                 status=status.HTTP_201_CREATED
             )
         elif request.method == 'DELETE':
+            if (
+                not Subscriptions.objects
+                .filter(user=user, following=subscribe)
+                .exists()
+            ):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            
             Subscriptions.objects.filter(
                 user=user, following=subscribe
             ).delete()
