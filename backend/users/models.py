@@ -96,12 +96,14 @@ class Subscriptions(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='followings'
+        related_name='followings',
+        verbose_name='кто подписан'
     )
     following = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='followers'
+        related_name='followers',
+        verbose_name='на кого подписан'
     )
 
     class Meta:

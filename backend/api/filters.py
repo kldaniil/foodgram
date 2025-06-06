@@ -72,9 +72,3 @@ class IngredientsFilter(FilterSet):
     class Meta:
         model = Ingredients
         fields = ('name',)
-
-
-# class UserSubscriptionsFilter(FilterSet):
-#     class Meta:
-#         model = User
-#         fields = ('id',)

@@ -3,10 +3,10 @@ from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.urls import reverse
+# from django.urls import reverse
 from djoser.views import UserViewSet
 from rest_framework import (
-    exceptions, filters, generics, mixins,
+    exceptions, mixins,
     permissions, status, viewsets
 )
 from rest_framework.decorators import action
@@ -14,13 +14,13 @@ from rest_framework.response import Response
 
 from recipes.models import (
     Favorites, Ingredients, Links, Recipes,
-    RecipesIngredients, ShoppingList, Tags
+    ShoppingList, Tags
 )
 from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
-from .pagination import CustomPagination
-from .permissions import AuthorOrReadOnly, ReadOnly, UserOrReadOnly
+from .pagination import CustomPagination, SubscriptionsPagination
+from .permissions import AuthorOrReadOnly
 from .serializers import (
     AvatarSerializer, IngredientsSerializer,
     CustomUserSerializer, RecipeFavoritesSerializer,
@@ -181,17 +181,38 @@ class CustomUsersViewSet(UserViewSet):
             return (permissions.IsAuthenticatedOrReadOnly(),)
         return super().get_permissions()
 
-    @action(detail=False, methods=['get'], url_path='me', permission_classes=(permissions.IsAuthenticated,))
+    @action(
+            detail=False, methods=['get'],
+            url_path='me',
+            permission_classes=(permissions.IsAuthenticated,)
+        )
     def me(self, request):
         return Response(self.get_serializer(request.user).data)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    @action(
+            detail=True,
+            methods=['post', 'delete'],
+            url_path='subscribe',
+            permission_classes=(permissions.IsAuthenticated,)
+        )
     def subscribe(self, request, id=None):
         user = request.user
-        subscribe = User.objects.prefetch_related('recipes').get(id=id)
+        try:
+            subscribe = User.objects.get(id=id)
+        except User.DoesNotExist:
+            raise exceptions.NotFound('Пользователь не существует')
+        
         if request.method == 'POST':
-            Subscriptions.objects.get_or_create(user=user, following=subscribe)
-            print(subscribe.recipes.all())
+            if subscribe == user:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+            _, created = Subscriptions.objects.get_or_create(
+                user=user,
+                following=subscribe
+            )
+            if not created:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            
             return Response(
                 SubscriptionsSerializer(
                     subscribe, context={'request': request}
@@ -221,7 +242,9 @@ class CustomUsersViewSet(UserViewSet):
         user = request.user
         queryset = User.objects.filter(followers__user=user)
         page = self.paginate_queryset(queryset)
-        serializer = SubscriptionsSerializer(page, many=True)
+        serializer = SubscriptionsSerializer(
+            page, many=True, context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)
 
     

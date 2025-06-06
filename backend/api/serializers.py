@@ -12,6 +12,7 @@ from recipes.models import (
 )
 from users.models import Subscriptions
 
+from .pagination import DEFAULT_PAGE_SIZE
 from .validators import ingredients_validator, tags_validator
 
 
@@ -100,22 +101,6 @@ class RecipeFavoritesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipes
         fields = ['id', 'name', 'image', 'cooking_time']
-
-
-class SubscriptionsSerializer(CustomUserSerializer):
-    recipes = RecipeFavoritesSerializer(many=True, read_only=True, source='recipes')
-    recipes_count = serializers.SerializerMethodField()
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-
-    class Meta:
-        model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
-        )
 
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
@@ -214,33 +199,39 @@ class RecipesReadSerializer(RecipeFavoritesSerializer):
     def get_is_favorited(self, obj):
         return self.make_bool_field(obj, Favorites)
 
-
     class Meta:
         model = Recipes
         fields = '__all__'
 
 
-class SubscriptionsSerializer(serializers.ModelSerializer):
-    recipes = RecipeFavoritesSerializer(read_only=True, many=True)
+class SubscriptionsSerializer(CustomUserSerializer):
+    # recipes = RecipeFavoritesSerializer(read_only=True, many=True)
     recipes_count = serializers.SerializerMethodField()
-    avatar = serializers.ImageField()
-    is_favorited = serializers.SerializerMethodField
-    is_subscribed = serializers.SerializerMethodField
-    def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        return (
-            user.is_authenticated
-            and Favorites.objects.filter(user=user, recipe=obj).exists()
+    recipes = serializers.SerializerMethodField()
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = request.query_params.get('recipes_limit', DEFAULT_PAGE_SIZE)
+        recipes = obj.recipes.all()[:int(recipes_limit)]
+        serializer = RecipeFavoritesSerializer(
+            recipes, 
+            read_only=True,
+            many=True,
+            context=self.context
         )
+        return serializer.data
+
     def get_recipes_count(self, obj):
-        return
+        return obj.recipes.count()
+
     class Meta:
         model = User
-        # fields = (
-        #     'id', 'email', 'username', 'first_name', 'last_name',
-        #     'recipes', 'avatar', 'recipes_count', 'is_favorited'
-        # )
-        fields = '__all__'
+        fields = (
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
+        )
+
+
 # TODO привести поля в порядок. Разобраться с возможно лишними сериалайзерами
 
 
