@@ -2,13 +2,17 @@ import base64
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.core.validators import MinValueValidator
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Favorites, Ingredients, Recipes, RecipesIngredients, ShoppingList, Tags
+    Favorites, Ingredients, MIN_POSITIVE_VALUE, Recipes,
+    RecipesIngredients, ShoppingList, Tags
 )
 from users.models import Subscriptions
+
+from .validators import ingredients_validator, tags_validator
 
 
 User = get_user_model()
@@ -75,7 +79,9 @@ class TagsSerialiser(serializers.ModelSerializer):
 
 class IngredientsAmountWriteSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(
+        validators=(MinValueValidator(MIN_POSITIVE_VALUE),)
+    )
 
 
 class IngredientsAmountReadSerializer(serializers.ModelSerializer):
@@ -96,13 +102,43 @@ class RecipeFavoritesSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'cooking_time']
 
 
+class SubscriptionsSerializer(CustomUserSerializer):
+    recipes = RecipeFavoritesSerializer(many=True, read_only=True, source='recipes')
+    recipes_count = serializers.SerializerMethodField()
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
+        )
+
+
 class RecipesWriteSerializer(serializers.ModelSerializer):
     image = ImageField()
-    ingredients = IngredientsAmountWriteSerializer(many=True)
+    ingredients = IngredientsAmountWriteSerializer(
+        many=True,
+        required=True,
+        allow_empty=False
+    )
     tags = serializers.PrimaryKeyRelatedField(
-        queryset = Tags.objects.all(), many=True
+        queryset = Tags.objects.all(),
+        many=True,
+        required = True,
+        allow_empty = False,
+        validators=(tags_validator,)
     )
     author = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    def validate_ingredients(self, value):
+        return ingredients_validator(value)
+    
+    def validate_tags(self, value):
+        return tags_validator(value)
 
     def save_ingredients_and_amount(self, recipe, ingredients):
         save_list = []
@@ -128,8 +164,16 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return recipe
     
     def update(self, instance, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients', None)
+        tags = validated_data.pop('tags', None)
+        if tags is None:
+            raise serializers.ValidationError(
+                {'tags': 'Поле tags обязательно'}
+            )
+        if ingredients is None:
+            raise serializers.ValidationError(
+                {'ingredients': 'Поле ingredients обязательно'}
+            )
         for key, value in validated_data.items():
             setattr(instance, key, value)
         instance.save()

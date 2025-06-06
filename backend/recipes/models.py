@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
@@ -8,6 +9,7 @@ MAX_TAG_LENGTH = 32
 MAX_RECIPE_LENGTH = 256
 MAX_INGREDIENT_NAME_LENGTH = 128
 MAX_INGREDIENT_MEASURE_LENGTH = 32
+MIN_POSITIVE_VALUE = 1
 
 
 class Tags(models.Model):
@@ -46,7 +48,10 @@ class Recipes(models.Model):
         null=True,
         default=None
     )
-    cooking_time = models.PositiveSmallIntegerField('Время приготовления')
+    cooking_time = models.PositiveSmallIntegerField(
+        'Время приготовления',
+        validators=[MinValueValidator(MIN_POSITIVE_VALUE),]
+    )
     tags = models.ManyToManyField(Tags, related_name='recipes', blank=True)
     ingredients = models.ManyToManyField(
         Ingredients,
@@ -75,7 +80,10 @@ class RecipesIngredients(models.Model):
     ingredient = models.ForeignKey(
         Ingredients, on_delete=models.CASCADE, related_name='ingredients_recipe'
     )
-    amount = models.PositiveSmallIntegerField('Количество')
+    amount = models.PositiveSmallIntegerField(
+        'Количество',
+        validators=[MinValueValidator(MIN_POSITIVE_VALUE)]
+    )
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент рецепта'

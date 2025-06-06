@@ -16,6 +16,7 @@ from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
 from .pagination import CustomPagination
+from .permissions import AuthorOrReadOnly, ReadOnly, UserOrReadOnly
 from .serializers import (
     AvatarSerializer, IngredientsSerializer, CustomUserSerializer,
     RecipeFavoritesSerializer,
@@ -31,16 +32,10 @@ class AvatarViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-# class AvatarViewSet(
-#     viewsets.ModelViewSet
-# ):
     serializer_class = AvatarSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
-        # user = self.request.user
-        # if not user.is_authenticated:
-        #     raise exceptions.NotAuthenticated()
         return self.request.user
     
     def destroy(self, request, *args, **kwargs):
@@ -56,6 +51,7 @@ class AvatarViewSet(
 
 
 class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.AllowAny,)
     serializer_class = IngredientsSerializer
     pagination_class = None
     filter_backends = (DjangoFilterBackend,)
@@ -64,6 +60,7 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
  
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.AllowAny,)
     queryset = Tags.objects.all()
     serializer_class = TagsSerialiser
     pagination_class = None
@@ -73,7 +70,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
     pagination_class = CustomPagination
 
     
@@ -112,8 +110,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         ).order_by('name',)
         shopping_list = []
         for list_item in ingredients:
-            shopping_list.append(f'{list_item["name"]}: {list_item["measurement_unitamount"]} {list_item[""]} \n')
-        # shopping_list = IngredientsSerializer(ingredients).data
+            shopping_list.append(
+                f'{list_item["name"]}: '
+                f'{list_item["measurement_unit"]} '
+                f'{list_item["amount"]} \n'
+            )
         response = HttpResponse(
             shopping_list,
             content_type='text/plain; charset=utf-8'
@@ -140,11 +141,14 @@ class CustomUsersViewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribe(self, request, id=None):
         user = request.user
-        subscribe = User.objects.get(id=id)
+        subscribe = User.objects.prefetch_related('recipes').get(id=id)
         if request.method == 'POST':
             Subscriptions.objects.get_or_create(user=user, following=subscribe)
+            print(subscribe.recipes.all())
             return Response(
-                CustomUserSerializer(subscribe).data,
+                SubscriptionsSerializer(
+                    subscribe, context={'request': request}
+                ).data,
                 status=status.HTTP_201_CREATED
             )
         elif request.method == 'DELETE':
@@ -166,24 +170,5 @@ class CustomUsersViewSet(UserViewSet):
         serializer = SubscriptionsSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-
-# class SubscriptionsViewSet(viewsets.ReadOnlyModelViewSet):
-#     serializer_class = CustomUserSerializer
-#     permission_classes = (permissions.IsAuthenticated,)
-
-#     def get_queryset(self):
-#         print('!!!!!!!!!!!!!!SUBSCRIPTIONS METHOD CALLED')
-#         return User.objects.filter(followers__user=self.request.user)
-    # @action(
-    #         detail=False, methods=['get',],
-    #         url_path='subscriptions',
-    #         permission_classes=(permissions.AllowAny,)
-    #     )
-    # def subscriptions(self, request):
-    #     print('!!!!!!!!!!!!!!SUBSCRIPTIONS METHOD CALLED')
-    #     user = request.user
-    #     queryset = User.objects.filter(followers__user=user)
-    #     return Response(
-    #         SubscriptionsSerializer(queryset, many=True).data,
-    #         status=status.HTTP_200_OK
-    #     )
+    
+# TODO short_link
