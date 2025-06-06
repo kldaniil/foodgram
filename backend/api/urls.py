@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AvatarViewSet, IngrediensViewSet,
-    RecipesViewSet, TagsViewSet, CustomUsersViewSet
+    RecipesViewSet, ShortLinkRedirectViewSet, TagsViewSet, CustomUsersViewSet
 )
 
 v1_router = DefaultRouter()
@@ -13,6 +13,9 @@ v1_router.register(r'tags', TagsViewSet, basename='tags')
 v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
 # v1_router.register(r'users/me/avatar', AvatarViewSet, basename='avatar')
 v1_router.register(r'users', CustomUsersViewSet, basename='users')
+v1_router.register(
+    r's', ShortLinkRedirectViewSet, basename='short_link_redirect'
+)
 
 urlpatterns = [
     path('auth/', include('djoser.urls.authtoken')),

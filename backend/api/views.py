@@ -2,15 +2,19 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.urls import reverse
 from djoser.views import UserViewSet
 from rest_framework import (
-    exceptions, filters, generics, mixins, permissions, status, viewsets
+    exceptions, filters, generics, mixins,
+    permissions, status, viewsets
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from recipes.models import (
-    Favorites, Ingredients, Recipes, RecipesIngredients, ShoppingList, Tags
+    Favorites, Ingredients, Links, Recipes,
+    RecipesIngredients, ShoppingList, Tags
 )
 from users.models import Subscriptions
 
@@ -18,11 +22,12 @@ from .filters import IngredientsFilter, RecipesFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnly, ReadOnly, UserOrReadOnly
 from .serializers import (
-    AvatarSerializer, IngredientsSerializer, CustomUserSerializer,
-    RecipeFavoritesSerializer,
-    RecipesReadSerializer, RecipesWriteSerializer, SubscriptionsSerializer,
-    TagsSerialiser,
+    AvatarSerializer, IngredientsSerializer,
+    CustomUserSerializer, RecipeFavoritesSerializer,
+    RecipesReadSerializer, RecipesWriteSerializer, ShortLinkSerializer,
+    SubscriptionsSerializer, TagsSerialiser,
     )
+from .utils import generate_short_link
 
 User = get_user_model()
 
@@ -121,6 +126,26 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         response['Content-Disposotion'] = 'attachment; filename="shopping_cart"'
         return response
+    
+    @action(detail=True, methods=['get',], url_path='get-link')
+    def get_link(self, request, pk=None):
+        recipe = self.get_object()
+        link, created = Links.objects.get_or_create(
+            recipe=recipe,
+            defaults={'link': generate_short_link()}
+        )
+        serializer = ShortLinkSerializer(link, context={'request': request})
+        return Response(serializer.data)
+
+
+class ShortLinkRedirectViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Links.objects.all()
+    lookup_field = 'link'
+
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        url = f'/recipes/{obj.recipe.id}/'
+        return redirect(url)
 
 
 class CustomUsersViewSet(UserViewSet):

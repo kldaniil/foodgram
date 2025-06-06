@@ -7,7 +7,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Favorites, Ingredients, MIN_POSITIVE_VALUE, Recipes,
+    Favorites, Ingredients, Links, MIN_POSITIVE_VALUE, Recipes,
     RecipesIngredients, ShoppingList, Tags
 )
 from users.models import Subscriptions
@@ -242,3 +242,25 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
         # )
         fields = '__all__'
 # TODO привести поля в порядок. Разобраться с возможно лишними сериалайзерами
+
+
+class ShortLinkSerializer(serializers.ModelSerializer):
+    short_link = serializers.SerializerMethodField()
+
+    def get_short_link(self, obj):
+        request = self.context.get('request')
+        if not request:
+            return None
+        site_url = request.scheme + '://' + request.get_host().split(':')[0]
+        short_link = site_url + '/s/' + obj.link
+        return short_link
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['short-link'] = data.pop('short_link')
+        return data
+
+    class Meta:
+        model = Recipes
+        fields = ('short_link',)
+

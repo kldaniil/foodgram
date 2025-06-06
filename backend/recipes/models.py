@@ -10,6 +10,7 @@ MAX_RECIPE_LENGTH = 256
 MAX_INGREDIENT_NAME_LENGTH = 128
 MAX_INGREDIENT_MEASURE_LENGTH = 32
 MIN_POSITIVE_VALUE = 1
+MAX_LINK_LENGTH = 32
 
 
 class Tags(models.Model):
@@ -123,3 +124,18 @@ class ShoppingList(models.Model):
         ordering = ['id',]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+
+
+class Links(models.Model):
+    recipe = models.OneToOneField(Recipes, on_delete=models.CASCADE, related_name='short_link')
+    link = models.CharField('ссылка', max_length=MAX_LINK_LENGTH)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'link'],
+                name='Recipe unique link'
+            )
+        ]
+        ordering = ['id',]
+        verbose_name = 'Короткая ссылка'
+        verbose_name_plural = 'короткие ссылки'
