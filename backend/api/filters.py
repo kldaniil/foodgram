@@ -15,7 +15,9 @@ class RecipesFilter(FilterSet):
     author = CharFilter(field_name='author__id')
     is_in_shopping_cart = BooleanFilter(method='filter_is_in_shopping_cart')
 
-    def filter_favorites_or_shopping(self, queryset, name, value, filter_field):
+    def filter_favorites_or_shopping(
+        self, queryset, name, value, filter_field
+    ):
         user = self.request.user
         if not user.is_authenticated and value:
             return queryset.none()
@@ -31,7 +33,7 @@ class RecipesFilter(FilterSet):
                 'favorites_recipes__user'
             )
         )
-    
+
     def filter_is_in_shopping_cart(self, queryset, name, value):
         return (
             self.filter_favorites_or_shopping(
@@ -39,7 +41,6 @@ class RecipesFilter(FilterSet):
                 'recipes_user_shopping_list__user'
             )
         )
-    
 
     class Meta:
         model = Recipes
@@ -69,6 +70,7 @@ class IngredientsFilter(FilterSet):
                 .order_by('priority', 'name')
             )
         return queryset
+
     class Meta:
         model = Ingredients
         fields = ('name',)

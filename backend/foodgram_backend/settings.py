@@ -1,4 +1,4 @@
-from os import getenv, path
+from os import getenv
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
@@ -72,23 +72,22 @@ WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 
 if DB_TYPE == 'postgres':
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': getenv('POSTGRES_DB', 'django'),
-        'USER': getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': getenv('POSTGRES_PASSWORD', ''),
-        'HOST': getenv('DB_HOST', ''),
-        'PORT': getenv('DB_PORT', 5432),
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': getenv('POSTGRES_DB', 'django'),
+            'USER': getenv('POSTGRES_USER', 'django'),
+            'PASSWORD': getenv('POSTGRES_PASSWORD', ''),
+            'HOST': getenv('DB_HOST', ''),
+            'PORT': getenv('DB_PORT', '5432'),
+        }
     }
-}
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': str(BASE_DIR / 'db.sqlite3'),
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -130,7 +129,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR.parent / 'backend_static/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'user_media'
+MEDIA_ROOT = '/user_media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -141,7 +140,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly', # isAuthenticatedOrReadOnly
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # isAuthenticatedOrReadOnly
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -172,5 +171,5 @@ DJOSER = {
 CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ALLOWED_ORIGINS = [
 #     'http://localhost:3000',
-# ] 
-CORS_URLS_REGEX = r'^/api/.*$' 
+# ]
+CORS_URLS_REGEX = r'^/api/.*$'

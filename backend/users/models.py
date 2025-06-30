@@ -10,13 +10,13 @@ from .constants import (
     USERNAME_FIELD_MAX_LENGTH, USERNAME_FIELD_MIN_LENGTH
 )
 
-
 ADMIN_ROLE = 'admin'
 USER_ROLE = 'user'
 ROLES = (
     (USER_ROLE, 'Пользователь'),
     (ADMIN_ROLE, 'Администратор'),
 )
+
 
 class CustomUser(AbstractUser):
     username = models.CharField(
@@ -89,7 +89,7 @@ class CustomUser(AbstractUser):
         ordering = ['id',]
 
     def __str__(self):
-        return self.username
+        return str(self.username)
 
 
 class Subscriptions(models.Model):

@@ -1,7 +1,6 @@
-from django.db import models
 from rest_framework import serializers
 
-from recipes.models import Ingredients, Tags
+from recipes.models import Ingredients
 
 
 def ingredients_validator(value):
@@ -19,7 +18,7 @@ def ingredients_validator(value):
             )
         if not Ingredients.objects.filter(id=item.get('id')).exists():
             raise serializers.ValidationError('Ингредиент не существует.')
-        
+
     return value
 
 

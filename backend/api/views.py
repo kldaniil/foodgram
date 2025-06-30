@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
-from django.http import FileResponse, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import redirect
 # from django.urls import reverse
 from djoser.views import UserViewSet
@@ -25,14 +25,14 @@ from recipes.models import (
 from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
-from .pagination import CustomPagination, SubscriptionsPagination
+from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (
     AvatarSerializer, IngredientsSerializer,
     CustomUserSerializer, RecipeFavoritesSerializer,
     RecipesReadSerializer, RecipesWriteSerializer, ShortLinkSerializer,
     SubscriptionsSerializer, TagsSerialiser,
-    )
+)
 from .utils import generate_short_link
 
 
@@ -55,12 +55,12 @@ class AvatarViewSet(
 
     def get_object(self):
         return self.request.user
-    
+
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
         user.avatar.delete(save=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         if user.avatar:
@@ -75,7 +75,7 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientsFilter
     queryset = Ingredients.objects.all()
- 
+
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
@@ -92,12 +92,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     pagination_class = CustomPagination
 
-    
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return RecipesWriteSerializer
         return RecipesReadSerializer
-    
+
     def add_recipe_to_cart_or_favorites(self, request, model):
         recipe = self.get_object()
         if request.method == 'POST':
@@ -118,57 +117,36 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 .exists()
             ):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
             model.objects.filter(user=request.user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(
-            detail=True,
-            methods=['post', 'delete'],
-            url_path='favorite',
-            permission_classes=(permissions.IsAuthenticated,)
-        )
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='favorite',
+        permission_classes=(permissions.IsAuthenticated,)
+    )
     def favorite(self, request, pk=None):
         return self.add_recipe_to_cart_or_favorites(request, Favorites)
 
     @action(
-            detail=True,
-            methods=['post', 'delete'],
-            url_path='shopping_cart',
-            permission_classes=(permissions.IsAuthenticated,)
-        )
-    def shopping_cart(self, requst, pk=None):
-        return self.add_recipe_to_cart_or_favorites(requst, ShoppingList)
-    
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='shopping_cart',
+        permission_classes=(permissions.IsAuthenticated,)
+    )
+    def shopping_cart(self, request, pk=None):
+        return self.add_recipe_to_cart_or_favorites(request, ShoppingList)
+
     @action(detail=False, methods=['get',], url_path='download_shopping_cart')
-    # def download_shopping_cart(self, requset):
-    #     user = requset.user
-    #     ingredients = Ingredients.objects.filter(
-    #         ingredients_recipe__recipe__recipes_user_shopping_list__user=user
-    #     ).values('name', 'measurement_unit').annotate(
-    #         amount=Sum('ingredients_recipe__amount')
-    #     ).order_by('name',)
-    #     shopping_list = []
-    #     for list_item in ingredients:
-    #         shopping_list.append(
-    #             f'{list_item["name"]}: '
-    #             f'{list_item["measurement_unit"]} '
-    #             f'{list_item["amount"]} \n'
-    #         )
-    #     response = HttpResponse(
-    #         shopping_list,
-    #         content_type='text/plain; charset=utf-8'
-    #     )
-    #     response['Content-Disposition'] = 'attachment; filename="shopping_cart"'
-    #     return response
-    def download_shopping_cart(self, requset):
-        user = requset.user
+    def download_shopping_cart(self, request):
+        user = request.user
         ingredients = Ingredients.objects.filter(
             ingredients_recipe__recipe__recipes_user_shopping_list__user=user
         ).values('name', 'measurement_unit').annotate(
             amount=Sum('ingredients_recipe__amount')
         ).order_by('name',)
-        shopping_list = []
 
         x = PDF_START_X
         y = PDF_START_Y
@@ -189,7 +167,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 x, y,
                 f'- {item["name"]} {item["amount"]} {item["measurement_unit"]}'
             )
-        
+
         pdf.showPage()
         pdf.save()
         buffer.seek(0)
@@ -198,9 +176,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
             buffer,
             content_type='application/pdf;'
         )
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.pdf"'
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.pdf"'
+        )
         return response
-    
+
     @action(detail=True, methods=['get',], url_path='get-link')
     def get_link(self, request, pk=None):
         recipe = self.get_object()
@@ -234,37 +214,37 @@ class CustomUsersViewSet(UserViewSet):
         return super().get_permissions()
 
     @action(
-            detail=False, methods=['get'],
-            url_path='me',
-            permission_classes=(permissions.IsAuthenticated,)
-        )
+        detail=False, methods=['get'],
+        url_path='me',
+        permission_classes=(permissions.IsAuthenticated,)
+    )
     def me(self, request):
         return Response(self.get_serializer(request.user).data)
 
     @action(
-            detail=True,
-            methods=['post', 'delete'],
-            url_path='subscribe',
-            permission_classes=(permissions.IsAuthenticated,)
-        )
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='subscribe',
+        permission_classes=(permissions.IsAuthenticated,)
+    )
     def subscribe(self, request, id=None):
         user = request.user
         try:
             subscribe = User.objects.get(id=id)
         except User.DoesNotExist:
             raise exceptions.NotFound('Пользователь не существует')
-        
+
         if request.method == 'POST':
             if subscribe == user:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
             _, created = Subscriptions.objects.get_or_create(
                 user=user,
                 following=subscribe
             )
             if not created:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
             return Response(
                 SubscriptionsSerializer(
                     subscribe, context={'request': request}
@@ -278,19 +258,19 @@ class CustomUsersViewSet(UserViewSet):
                 .exists()
             ):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            
+
             Subscriptions.objects.filter(
                 user=user, following=subscribe
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(
         detail=False, methods=['get',],
         url_path='subscriptions',
         permission_classes=(permissions.AllowAny,)
     )
     def subscriptions(self, request):
-        
+
         user = request.user
         queryset = User.objects.filter(followers__user=user)
         page = self.paginate_queryset(queryset)

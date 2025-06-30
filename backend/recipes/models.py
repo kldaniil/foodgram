@@ -3,7 +3,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
-
 SHORT_STRING = 25
 MAX_TAG_LENGTH = 32
 MAX_RECIPE_LENGTH = 256
@@ -16,10 +15,11 @@ MAX_LINK_LENGTH = 32
 class Tags(models.Model):
     name = models.CharField('Тег', max_length=MAX_TAG_LENGTH)
     slug = models.SlugField('Slug', max_length=MAX_TAG_LENGTH, unique=True)
+
     class Meta:
         ordering = ['id',]
-        verbose_name = 'Tag'
-        verbose_name_plural = 'tags'
+        verbose_name = 'Тег'
+        verbose_name_plural = 'теги'
 
     def __str__(self):
         return Truncator(self.name).chars(SHORT_STRING)
@@ -30,11 +30,12 @@ class Ingredients(models.Model):
     measurement_unit = models.CharField(
         'Единицы измерения', max_length=MAX_INGREDIENT_MEASURE_LENGTH
     )
+
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'ингредиенты'
-    
+
     def __str__(self):
         return Truncator(self.name).chars(SHORT_STRING)
 
@@ -65,6 +66,7 @@ class Recipes(models.Model):
         related_name='recipes',
         verbose_name='Автор'
     )
+
     class Meta:
         ordering = ['id',]
         verbose_name = 'Рецепт'
@@ -79,12 +81,15 @@ class RecipesIngredients(models.Model):
         Recipes, on_delete=models.CASCADE, related_name='recipe_ingredients'
     )
     ingredient = models.ForeignKey(
-        Ingredients, on_delete=models.CASCADE, related_name='ingredients_recipe'
+        Ingredients,
+        on_delete=models.CASCADE,
+        related_name='ingredients_recipe'
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
         validators=[MinValueValidator(MIN_POSITIVE_VALUE)]
     )
+
     class Meta:
         ordering = ['id',]
         verbose_name = 'Ингредиент рецепта'
@@ -120,6 +125,7 @@ class ShoppingList(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes_user_shopping_list'
     )
+
     class Meta:
         ordering = ['id',]
         verbose_name = 'Список покупок'
@@ -127,8 +133,13 @@ class ShoppingList(models.Model):
 
 
 class Links(models.Model):
-    recipe = models.OneToOneField(Recipes, on_delete=models.CASCADE, related_name='short_link')
+    recipe = models.OneToOneField(
+        Recipes,
+        on_delete=models.CASCADE,
+        related_name='short_link'
+    )
     link = models.CharField('ссылка', max_length=MAX_LINK_LENGTH)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(

@@ -7,10 +7,9 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Favorites, Ingredients, Links, MIN_POSITIVE_VALUE, Recipes,
+    Favorites, Ingredients, MIN_POSITIVE_VALUE, Recipes,
     RecipesIngredients, ShoppingList, Tags
 )
-from users.models import Subscriptions
 
 from .pagination import DEFAULT_PAGE_SIZE
 from .validators import ingredients_validator, tags_validator
@@ -22,19 +21,23 @@ User = get_user_model()
 class ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
-            format, image_data = data.split(';base64,')
-            extension = format.split('/')[-1]
+            file_format, image_data = data.split(';base64,')
+            extension = file_format.split('/')[-1]
             user_id = self.context['request'].user.id
             data = ContentFile(
                 base64.b64decode(image_data),
-                name=f'avatar_{user_id}.{extension}'
+                name=f'image_{user_id}.{extension}'
             )
         return super().to_internal_value(data)
 
+
 class CustomUserCreateSerializer(UserCreateSerializer):
+
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'email', 'password']
+        fields = [
+            'id', 'first_name', 'last_name', 'username', 'email', 'password'
+        ]
 
 
 class CustomUserSerializer(UserSerializer):
@@ -43,7 +46,6 @@ class CustomUserSerializer(UserSerializer):
         read_only=True
     )
     avatar = serializers.ImageField(required=False, allow_null=True)
-
 
     def check_subscription(self, obj):
         user = self.context.get('request').user
@@ -61,18 +63,21 @@ class CustomUserSerializer(UserSerializer):
 
 class AvatarSerializer(serializers.ModelSerializer):
     avatar = ImageField(required=True, allow_null=False)
+
     class Meta:
         model = User
         fields = ['avatar',]
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Ingredients
         fields = '__all__'
 
 
 class TagsSerialiser(serializers.ModelSerializer):
+
     class Meta:
         model = Tags
         fields = '__all__'
@@ -91,6 +96,7 @@ class IngredientsAmountReadSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
+
     class Meta:
         model = RecipesIngredients
         fields = ['id', 'name', 'measurement_unit', 'amount']
@@ -98,6 +104,7 @@ class IngredientsAmountReadSerializer(serializers.ModelSerializer):
 
 class RecipeFavoritesSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
+
     class Meta:
         model = Recipes
         fields = ['id', 'name', 'image', 'cooking_time']
@@ -111,10 +118,10 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         allow_empty=False
     )
     tags = serializers.PrimaryKeyRelatedField(
-        queryset = Tags.objects.all(),
+        queryset=Tags.objects.all(),
         many=True,
-        required = True,
-        allow_empty = False,
+        required=True,
+        allow_empty=False,
         validators=(tags_validator,)
     )
     author = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -211,7 +218,9 @@ class SubscriptionsSerializer(CustomUserSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        recipes_limit = request.query_params.get('recipes_limit', DEFAULT_PAGE_SIZE)
+        recipes_limit = request.query_params.get(
+            'recipes_limit', DEFAULT_PAGE_SIZE
+        )
         recipes = obj.recipes.all()[:int(recipes_limit)]
         serializer = RecipeFavoritesSerializer(
             recipes, 
