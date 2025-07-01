@@ -16,6 +16,7 @@ services:
     container_name: foodgram-backend
     depends_on:
       - db
+    restart: always
     image: kldaniil/foodgram_backend
     env_file:
       - .env
