@@ -6,24 +6,17 @@ from .models import Ingredients, Recipes, RecipesIngredients
 
 
 class IngredientsAdminInLine(admin.TabularInline):
+    '''Inline для ингредиентов в рецепте.'''
     model = RecipesIngredients
     fields = ('ingredient', 'amount')
-    # readonly_fields = ('ingredient', )
     verbose_name = 'Ингредиент'
     verbose_name_plural = 'Ингредиенты'
     extra = 1
     autocomplete_fields = ('ingredient',)
 
-    # @admin.display(description='ед. измерения')
-    # def measurement_unit(self, obj):
-    #     return obj.ingredient.measurement_unit
-
-    # @admin.display(description='Ингредиент')
-    # def ingredient(self, obj):
-    #     return f'{obj.ingredient} ({obj.ingredient.measurement_unit})'
-
 
 class RecipesAdmin(admin.ModelAdmin):
+    '''Админка для рецептов.'''
     list_display = ('id', 'name', 'author', 'favorites_recipes_count')
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
@@ -38,10 +31,12 @@ class RecipesAdmin(admin.ModelAdmin):
 
     @admin.display(description='Добавлено в избранное раз:')
     def favorites_recipes_count(self, obj):
+        '''Считает количество добавлений в избранное.'''
         return obj.favorites_recipes.count()
 
     @admin.display(description='Фото блюда')
     def preview(self, obj):
+        '''Показывает превью блюда.'''
         if obj.image:
             return format_html(
                 '<img src="{}" style="max-height: 100px;" />', obj.image.url
@@ -50,12 +45,14 @@ class RecipesAdmin(admin.ModelAdmin):
 
 
 class IngredientsAdmin(admin.ModelAdmin):
+    '''Админка для ингредиентов.'''
     list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
 
 
 class TagsAdmin(admin.ModelAdmin):
+    '''Админка для тегов.'''
     list_display = ('id', 'name', 'slug')
     search_fields = ('name',)
     list_display_links = ('id', 'name', 'slug')

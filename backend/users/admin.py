@@ -6,10 +6,12 @@ from .models import CustomUser
 
 
 class CustomUserAdmin(UserAdmin):
+    '''Админка для кастомной модели пользователя.'''
     readonly_fields = ('preview',)
 
     @admin.display(description='Аватар')
     def preview(self, obj):
+        '''Превью аватара пользователя.'''
         if obj.image:
             return format_html(
                 '<img src="{}" style="max-height: 100px;" />', obj.image.url

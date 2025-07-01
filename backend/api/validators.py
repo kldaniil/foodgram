@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 
 def ingredients_validator(value):
+    '''Валидатор для ингредиентов. Проверяет, что ингредиенты не пустые,
+    не повторяются и существуют в базе данных.'''
     if not value:
         raise serializers.ValidationError(
             'Поле ingredients не может быть пустым'
@@ -22,6 +24,7 @@ def ingredients_validator(value):
 
 
 def tags_validator(value):
+    '''Валидатор для тегов. Проверяет, что теги не пустые и не повторяются.'''
     if not value:
         raise serializers.ValidationError(
             'Поле tags не может быть пустым'

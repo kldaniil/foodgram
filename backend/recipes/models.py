@@ -13,6 +13,7 @@ MAX_LINK_LENGTH = 32
 
 
 class Tags(models.Model):
+    """Модель для тегов."""
     name = models.CharField('Тег', max_length=MAX_TAG_LENGTH)
     slug = models.SlugField('Slug', max_length=MAX_TAG_LENGTH, unique=True)
 
@@ -26,6 +27,7 @@ class Tags(models.Model):
 
 
 class Ingredients(models.Model):
+    """Модель для ингредиентов."""
     name = models.CharField('Название', max_length=MAX_INGREDIENT_NAME_LENGTH)
     measurement_unit = models.CharField(
         'Единицы измерения', max_length=MAX_INGREDIENT_MEASURE_LENGTH
@@ -44,6 +46,7 @@ class Ingredients(models.Model):
 
 
 class Recipes(models.Model):
+    """Модель для рецептов."""
     name = models.CharField('Название', max_length=MAX_RECIPE_LENGTH)
     text = models.TextField('Содержание')
     image = models.ImageField(
@@ -80,6 +83,7 @@ class Recipes(models.Model):
 
 
 class RecipesIngredients(models.Model):
+    '''Модель для связи рецептов и ингредиентов.'''
     recipe = models.ForeignKey(
         Recipes, on_delete=models.CASCADE, related_name='recipe_ingredients'
     )
@@ -107,6 +111,7 @@ class RecipesIngredients(models.Model):
 
 
 class Favorites(models.Model):
+    '''Модель для избранных рецептов пользователя.'''
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
@@ -125,6 +130,7 @@ class Favorites(models.Model):
 
 
 class ShoppingList(models.Model):
+    '''Модель для списка покупок пользователя.'''
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -143,6 +149,7 @@ class ShoppingList(models.Model):
 
 
 class Links(models.Model):
+    '''Модель для коротких ссылок на рецепты.'''
     recipe = models.OneToOneField(
         Recipes,
         on_delete=models.CASCADE,
