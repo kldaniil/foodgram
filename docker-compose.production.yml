@@ -11,7 +11,7 @@ services:
     image: postgres:13
     env_file: .env
     volumes:
-      - pg_data:/var/lib/postgresql/pg_data
+      - pg_data:/var/lib/postgresql/data
   backend:
     container_name: foodgram-backend
     depends_on:
