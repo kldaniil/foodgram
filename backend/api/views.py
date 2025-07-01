@@ -151,7 +151,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         x = PDF_START_X
         y = PDF_START_Y
         font_path = str(
-            settings.BASE_DIR.parent / 'fonts' / 'Carlito-Regular.ttf'
+            settings.BASE_DIR / 'fonts' / 'Carlito-Regular.ttf'
         )
         pdfmetrics.registerFont(TTFont(PDF_FONT, font_path))
         buffer = io.BytesIO()

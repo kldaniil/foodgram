@@ -37,7 +37,10 @@ class Ingredients(models.Model):
         verbose_name_plural = 'ингредиенты'
 
     def __str__(self):
-        return Truncator(self.name).chars(SHORT_STRING)
+        return (
+            f'{Truncator(self.name).chars(SHORT_STRING)} '
+            f'({self.measurement_unit})'
+        )
 
 
 class Recipes(models.Model):
@@ -83,7 +86,8 @@ class RecipesIngredients(models.Model):
     ingredient = models.ForeignKey(
         Ingredients,
         on_delete=models.CASCADE,
-        related_name='ingredients_recipe'
+        related_name='ingredients_recipe',
+        verbose_name='Ингредиент',
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
@@ -94,6 +98,12 @@ class RecipesIngredients(models.Model):
         ordering = ['id',]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
+
+    # def __str__(self):
+    #     return (
+    #         f'{self.ingredient}: {self.amount} '
+    #         f'{self.ingredient.measurement_unit}.'
+    #     )
 
 
 class Favorites(models.Model):
