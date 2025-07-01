@@ -150,6 +150,7 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: "docker-compose.production.yml"
           target: "foodgram"
+          debug: true
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
@@ -164,6 +165,8 @@ jobs:
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
             sudo docker compose -f docker-compose.production.yml up -d
+            echo 'wait for db 15 sec'
+            sleep 15
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_demo_ingredients
