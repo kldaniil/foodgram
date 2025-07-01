@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         '''Импортирует ингредиенты из файла ingredients.json'''
-        path = settings.BASE_DIR.parent / 'data' / 'ingredients.json'
+        path = settings.BASE_DIR / 'data' / 'ingredients.json'
         with open(path, encoding='utf-8') as file:
             ingredients = json.load(file)
             for ingredient in ingredients:
