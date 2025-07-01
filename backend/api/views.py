@@ -140,7 +140,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         '''Добавляет или удаляет рецепт из списка покупок.'''
         return self.add_recipe_to_cart_or_favorites(request, ShoppingList)
 
-    @action(detail=False, methods=['get',], url_path='download_shopping_cart')
+    @action(detail=False, methods=['get', ], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
         '''Создает PDF-файл со списком покупок.'''
         user = request.user
@@ -183,7 +183,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         return response
 
-    @action(detail=True, methods=['get',], url_path='get-link')
+    @action(detail=True, methods=['get', ], url_path='get-link')
     def get_link(self, request, pk=None):
         '''Создает короткую ссылку на рецепт.'''
         recipe = self.get_object()
@@ -274,7 +274,7 @@ class CustomUsersViewSet(UserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        detail=False, methods=['get',],
+        detail=False, methods=['get', ],
         url_path='subscriptions',
         permission_classes=(permissions.AllowAny,)
     )

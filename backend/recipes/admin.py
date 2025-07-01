@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from recipes.models import Ingredients, Recipes, Tags
 
-from .models import Ingredients, Recipes, RecipesIngredients
+from .models import Ingredients, Recipes, RecipesIngredients, Tags
 
 
 class IngredientsAdminInLine(admin.TabularInline):

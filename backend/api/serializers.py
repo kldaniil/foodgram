@@ -67,7 +67,7 @@ class AvatarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['avatar',]
+        fields = ['avatar', ]
 
 
 class IngredientsSerializer(serializers.ModelSerializer):

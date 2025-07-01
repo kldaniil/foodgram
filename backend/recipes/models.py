@@ -18,7 +18,7 @@ class Tags(models.Model):
     slug = models.SlugField('Slug', max_length=MAX_TAG_LENGTH, unique=True)
 
     class Meta:
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Тег'
         verbose_name_plural = 'теги'
 
@@ -34,7 +34,7 @@ class Ingredients(models.Model):
     )
 
     class Meta:
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'ингредиенты'
 
@@ -58,7 +58,7 @@ class Recipes(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
-        validators=[MinValueValidator(MIN_POSITIVE_VALUE),]
+        validators=[MinValueValidator(MIN_POSITIVE_VALUE), ]
     )
     tags = models.ManyToManyField(Tags, related_name='recipes', blank=True)
     ingredients = models.ManyToManyField(
@@ -74,7 +74,7 @@ class Recipes(models.Model):
     )
 
     class Meta:
-        ordering = ['-id',]
+        ordering = ['-id', ]
         verbose_name = 'Рецепт'
         verbose_name_plural = 'рецепты'
 
@@ -99,15 +99,9 @@ class RecipesIngredients(models.Model):
     )
 
     class Meta:
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
-
-    # def __str__(self):
-    #     return (
-    #         f'{self.ingredient}: {self.amount} '
-    #         f'{self.ingredient.measurement_unit}.'
-    #     )
 
 
 class Favorites(models.Model):
@@ -124,7 +118,7 @@ class Favorites(models.Model):
     )
 
     class Meta:
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Избранное'
         verbose_name_plural = 'избранные'
 
@@ -143,7 +137,7 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
 
@@ -164,6 +158,6 @@ class Links(models.Model):
                 name='Recipe unique link'
             )
         ]
-        ordering = ['id',]
+        ordering = ['id', ]
         verbose_name = 'Короткая ссылка'
         verbose_name_plural = 'короткие ссылки'
