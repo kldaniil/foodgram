@@ -89,8 +89,7 @@ jobs:
       # Эта команда устанавливает зависимости для фронтенда
       run: |
         cd frontend/
-        npm install --legacy-peer-deps
-        npm install timers-browserify --save-dev
+        npm ci --legacy-peer-deps
 
     - name: Test frontend
       # Запускаем тесты
