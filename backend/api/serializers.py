@@ -4,16 +4,12 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.validators import MinValueValidator
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from recipes.models import (MIN_POSITIVE_VALUE, Favorites, Ingredients,
+                            Recipes, RecipesIngredients, ShoppingList, Tags)
 from rest_framework import serializers
-
-from recipes.models import (
-    Favorites, Ingredients, MIN_POSITIVE_VALUE, Recipes,
-    RecipesIngredients, ShoppingList, Tags
-)
 
 from .pagination import DEFAULT_PAGE_SIZE
 from .validators import ingredients_validator, tags_validator
-
 
 User = get_user_model()
 
@@ -128,7 +124,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, value):
         return ingredients_validator(value)
-    
+
     def validate_tags(self, value):
         return tags_validator(value)
 
@@ -154,7 +150,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         recipe.tags.set(tags)
         self.save_ingredients_and_amount(recipe, ingredients)
         return recipe
-    
+
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients', None)
         tags = validated_data.pop('tags', None)
@@ -173,7 +169,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         RecipesIngredients.objects.filter(recipe=instance).delete()
         self.save_ingredients_and_amount(instance, ingredients)
         return instance
-    
+
     def to_representation(self, instance):
         read_serializer = RecipesReadSerializer(instance, context=self.context)
         return read_serializer.data
@@ -223,7 +219,7 @@ class SubscriptionsSerializer(CustomUserSerializer):
         )
         recipes = obj.recipes.all()[:int(recipes_limit)]
         serializer = RecipeFavoritesSerializer(
-            recipes, 
+            recipes,
             read_only=True,
             many=True,
             context=self.context
@@ -254,7 +250,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         site_url = request.scheme + '://' + request.get_host().split(':')[0]
         short_link = site_url + '/s/' + obj.link
         return short_link
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['short-link'] = data.pop('short_link')
@@ -263,4 +259,3 @@ class ShortLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipes
         fields = ('short_link',)
-

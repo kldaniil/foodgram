@@ -1,14 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (
-    EmailValidator, MaxLengthValidator, MinLengthValidator, RegexValidator
-)
+from django.core.validators import (EmailValidator, MaxLengthValidator,
+                                    MinLengthValidator, RegexValidator)
 from django.db import models
 
-from .constants import (
-    EMAIL_FIELD_MAX_LENGTH, EMAIL_FIELD_MIN_LENGTH,
-    USERNAME_FIELD_MAX_LENGTH, USERNAME_FIELD_MIN_LENGTH
-)
+from .constants import (EMAIL_FIELD_MAX_LENGTH, EMAIL_FIELD_MIN_LENGTH,
+                        USERNAME_FIELD_MAX_LENGTH, USERNAME_FIELD_MIN_LENGTH)
 
 ADMIN_ROLE = 'admin'
 USER_ROLE = 'user'

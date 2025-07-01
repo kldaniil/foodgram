@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Case, IntegerField, Q, Value, When
-from django_filters.rest_framework import (
-    AllValuesMultipleFilter, BooleanFilter, CharFilter, FilterSet
-)
+from django_filters.rest_framework import (AllValuesMultipleFilter,
+                                           BooleanFilter, CharFilter,
+                                           FilterSet)
 from recipes.models import Ingredients, Recipes
-
 
 User = get_user_model()
 

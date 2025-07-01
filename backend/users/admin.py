@@ -20,4 +20,5 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('preview',)}),
     )
 
+
 admin.site.register(CustomUser, CustomUserAdmin)

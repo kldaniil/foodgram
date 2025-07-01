@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from recipes.models import Ingredients
+from rest_framework import serializers
 
 
 def ingredients_validator(value):
@@ -29,7 +28,7 @@ def tags_validator(value):
         )
     tags = set()
     for item in value:
-        if not item in tags:
+        if item not in tags:
             tags.add(item)
         else:
             raise serializers.ValidationError(

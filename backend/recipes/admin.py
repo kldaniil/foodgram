@@ -1,9 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-
-from recipes.models import (
-    Ingredients, Recipes, Tags
-)
+from recipes.models import Ingredients, Recipes, Tags
 
 from .models import Ingredients, Recipes, RecipesIngredients
 
@@ -15,7 +12,7 @@ class IngredientsAdminInLine(admin.TabularInline):
     verbose_name = 'Ингредиент'
     verbose_name_plural = 'Ингредиенты'
     extra = 1
-    autocomplete_fields = ('ingredients',)
+    autocomplete_fields = ('ingredient',)
 
     # @admin.display(description='ед. измерения')
     # def measurement_unit(self, obj):

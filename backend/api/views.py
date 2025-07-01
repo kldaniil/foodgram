@@ -1,40 +1,32 @@
 import io
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django_filters.rest_framework import DjangoFilterBackend
-from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django_filters.rest_framework import DjangoFilterBackend
 # from django.urls import reverse
 from djoser.views import UserViewSet
-from reportlab.pdfgen import canvas
+from recipes.models import (Favorites, Ingredients, Links, Recipes,
+                            ShoppingList, Tags)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from rest_framework import (
-    exceptions, mixins,
-    permissions, status, viewsets
-)
+from reportlab.pdfgen import canvas
+from rest_framework import exceptions, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
-from recipes.models import (
-    Favorites, Ingredients, Links, Recipes,
-    ShoppingList, Tags
-)
 from users.models import Subscriptions
 
 from .filters import IngredientsFilter, RecipesFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnly
-from .serializers import (
-    AvatarSerializer, IngredientsSerializer,
-    CustomUserSerializer, RecipeFavoritesSerializer,
-    RecipesReadSerializer, RecipesWriteSerializer, ShortLinkSerializer,
-    SubscriptionsSerializer, TagsSerialiser,
-)
+from .serializers import (AvatarSerializer, CustomUserSerializer,
+                          IngredientsSerializer, RecipeFavoritesSerializer,
+                          RecipesReadSerializer, RecipesWriteSerializer,
+                          ShortLinkSerializer, SubscriptionsSerializer,
+                          TagsSerialiser)
 from .utils import generate_short_link
-
 
 PDF_START_X = 40
 PDF_START_Y = 800
