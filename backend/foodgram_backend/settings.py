@@ -167,9 +167,3 @@ DJOSER = {
         'current_user': ['rest_framework.permissions.IsAuthenticated'],
     }
 }
-
-CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:3000',
-# ]
-CORS_URLS_REGEX = r'^/api/.*$'
