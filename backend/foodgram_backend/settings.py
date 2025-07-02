@@ -167,3 +167,9 @@ DJOSER = {
         'current_user': ['rest_framework.permissions.IsAuthenticated'],
     }
 }
+
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = getenv('CORS_ALLOWED_ORIGINS', '').split(',')

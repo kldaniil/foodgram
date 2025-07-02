@@ -9,7 +9,7 @@ User = get_user_model()
 
 
 class RecipesFilter(FilterSet):
-    '''Фильтр для рецептов.'''
+    """Фильтр для рецептов."""
     is_favorited = BooleanFilter(method='filter_is_favorited')
     tags = AllValuesMultipleFilter(field_name='tags__slug')
     author = CharFilter(field_name='author__id')
@@ -18,7 +18,7 @@ class RecipesFilter(FilterSet):
     def filter_favorites_or_shopping(
         self, queryset, name, value, filter_field
     ):
-        '''Обработка фильтра по избранным или списку покупок.'''
+        """Обработка фильтра по избранным или списку покупок."""
         user = self.request.user
         if not user.is_authenticated and value:
             return queryset.none()
@@ -28,7 +28,7 @@ class RecipesFilter(FilterSet):
         return queryset
 
     def filter_is_favorited(self, queryset, name, value):
-        '''Фильтрует рецепты по избранным.'''
+        """Фильтрует рецепты по избранным."""
         return (
             self.filter_favorites_or_shopping(
                 queryset, name, value,
@@ -37,7 +37,7 @@ class RecipesFilter(FilterSet):
         )
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
-        '''Фильтрует рецепты по списку покупок.'''
+        """Фильтрует рецепты по списку покупок."""
         return (
             self.filter_favorites_or_shopping(
                 queryset, name, value,
@@ -51,7 +51,7 @@ class RecipesFilter(FilterSet):
 
 
 class IngredientsFilter(FilterSet):
-    '''Фильтр для ингредиентов.'''
+    """Фильтр для ингредиентов."""
     name = CharFilter(method='filter_name')
 
     def filter_name(self, queryset, name, value):

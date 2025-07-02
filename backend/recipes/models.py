@@ -1,24 +1,21 @@
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
-SHORT_STRING = 25
-MAX_TAG_LENGTH = 32
-MAX_RECIPE_LENGTH = 256
-MAX_INGREDIENT_NAME_LENGTH = 128
-MAX_INGREDIENT_MEASURE_LENGTH = 32
-MIN_POSITIVE_VALUE = 1
-MAX_LINK_LENGTH = 32
+from .constants import (MAX_INGREDIENT_MEASURE_LENGTH,
+                        MAX_INGREDIENT_NAME_LENGTH, MAX_LINK_LENGTH,
+                        MAX_POSITIVE_VALUE, MAX_RECIPE_LENGTH, MAX_TAG_LENGTH,
+                        MIN_POSITIVE_VALUE, SHORT_STRING)
 
 
 class Tags(models.Model):
     """Модель для тегов."""
-    name = models.CharField('Тег', max_length=MAX_TAG_LENGTH)
+    name = models.CharField('Тег', max_length=MAX_TAG_LENGTH, unique=True)
     slug = models.SlugField('Slug', max_length=MAX_TAG_LENGTH, unique=True)
 
     class Meta:
-        ordering = ['id', ]
+        ordering = ['name', ]
         verbose_name = 'Тег'
         verbose_name_plural = 'теги'
 
@@ -34,9 +31,15 @@ class Ingredients(models.Model):
     )
 
     class Meta:
-        ordering = ['id', ]
+        ordering = ['name', ]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient_unit'
+            )
+        ]
 
     def __str__(self):
         return (
@@ -58,7 +61,10 @@ class Recipes(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
-        validators=[MinValueValidator(MIN_POSITIVE_VALUE), ]
+        validators=[
+            MinValueValidator(MIN_POSITIVE_VALUE),
+            MaxValueValidator(MAX_POSITIVE_VALUE)
+        ]
     )
     tags = models.ManyToManyField(Tags, related_name='recipes', blank=True)
     ingredients = models.ManyToManyField(
@@ -72,9 +78,20 @@ class Recipes(models.Model):
         related_name='recipes',
         verbose_name='Автор'
     )
+    short_link = models.CharField(
+        'Короткая ссылка',
+        max_length=MAX_LINK_LENGTH,
+        unique=True,
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(
+        'Дата создания',
+        auto_now_add=True,
+    )
 
     class Meta:
-        ordering = ['-id', ]
+        ordering = ['-created_at', 'name']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'рецепты'
 
@@ -83,7 +100,7 @@ class Recipes(models.Model):
 
 
 class RecipesIngredients(models.Model):
-    '''Модель для связи рецептов и ингредиентов.'''
+    """Модель для связи рецептов и ингредиентов."""
     recipe = models.ForeignKey(
         Recipes, on_delete=models.CASCADE, related_name='recipe_ingredients'
     )
@@ -95,17 +112,34 @@ class RecipesIngredients(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
-        validators=[MinValueValidator(MIN_POSITIVE_VALUE)]
+        validators=[
+            MinValueValidator(MIN_POSITIVE_VALUE),
+            MaxValueValidator(MAX_POSITIVE_VALUE)
+        ]
     )
 
     class Meta:
-        ordering = ['id', ]
+        ordering = ['recipe', ]
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
 
 
+# class AbstractUserRecipeModel(models.Model):
+#     """Абстрактная модель для избранного и списка покупок."""
+#     recipe = models.ForeignKey(
+#         Recipes,
+#         on_delete=models.CASCADE,
+#     )
+#     user = models.ForeignKey(
+#         settings.AUTH_USER_MODEL,
+#         on_delete=models.CASCADE,
+#     )
+
+#     class Meta:
+#         abstract = True
+
 class Favorites(models.Model):
-    '''Модель для избранных рецептов пользователя.'''
+    """Модель для избранных рецептов пользователя."""
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
@@ -118,13 +152,19 @@ class Favorites(models.Model):
     )
 
     class Meta:
-        ordering = ['id', ]
+        ordering = ['user', ]
         verbose_name = 'Избранное'
         verbose_name_plural = 'избранные'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique_user_favorite_recipe'
+            )
+        ]
 
 
 class ShoppingList(models.Model):
-    '''Модель для списка покупок пользователя.'''
+    """Модель для списка покупок пользователя."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -137,27 +177,33 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
-        ordering = ['id', ]
+        ordering = ['user', ]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-
-
-class Links(models.Model):
-    '''Модель для коротких ссылок на рецепты.'''
-    recipe = models.OneToOneField(
-        Recipes,
-        on_delete=models.CASCADE,
-        related_name='short_link'
-    )
-    link = models.CharField('ссылка', max_length=MAX_LINK_LENGTH)
-
-    class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['recipe', 'link'],
-                name='Recipe unique link'
+                fields=['recipe', 'user'],
+                name='unique_user_shopping_recipe'
             )
         ]
-        ordering = ['id', ]
-        verbose_name = 'Короткая ссылка'
-        verbose_name_plural = 'короткие ссылки'
+
+
+# class Links(models.Model):
+#     """Модель для коротких ссылок на рецепты."""
+#     recipe = models.OneToOneField(
+#         Recipes,
+#         on_delete=models.CASCADE,
+#         related_name='short_link'
+#     )
+#     link = models.CharField('ссылка', max_length=MAX_LINK_LENGTH)
+
+#     class Meta:
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=['recipe', 'link'],
+#                 name='Recipe unique link'
+#             )
+#         ]
+#         ordering = ['id', ]
+#         verbose_name = 'Короткая ссылка'
+#         verbose_name_plural = 'короткие ссылки'

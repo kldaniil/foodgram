@@ -1,11 +1,13 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html
 
-from .models import Ingredients, Recipes, RecipesIngredients, Tags
+from .models import (Favorites, Ingredients, Recipes,
+                     RecipesIngredients, ShoppingList, Tags)
 
 
 class IngredientsAdminInLine(admin.TabularInline):
-    '''Inline для ингредиентов в рецепте.'''
+    """Inline для ингредиентов в рецепте."""
     model = RecipesIngredients
     fields = ('ingredient', 'amount')
     verbose_name = 'Ингредиент'
@@ -14,8 +16,9 @@ class IngredientsAdminInLine(admin.TabularInline):
     autocomplete_fields = ('ingredient',)
 
 
+@admin.register(Recipes)
 class RecipesAdmin(admin.ModelAdmin):
-    '''Админка для рецептов.'''
+    """Админка для рецептов."""
     list_display = ('id', 'name', 'author', 'favorites_recipes_count')
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
@@ -28,14 +31,23 @@ class RecipesAdmin(admin.ModelAdmin):
         'cooking_time', 'tags', 'favorites_recipes_count'
     )
 
+    def get_queryset(self, request):
+        """
+        Переопределяем метод get_queryset для добавления счетчика
+        избранных рецептов.
+        """
+        return Recipes.objects.annotate(
+            favorites_recipes_count=Count('favorites_recipes')
+        )
+
     @admin.display(description='Добавлено в избранное раз:')
     def favorites_recipes_count(self, obj):
-        '''Считает количество добавлений в избранное.'''
-        return obj.favorites_recipes.count()
+        """Возвращает количество добавлений в избранное."""
+        return obj.favorites_recipes_count
 
     @admin.display(description='Фото блюда')
     def preview(self, obj):
-        '''Показывает превью блюда.'''
+        """Показывает превью блюда."""
         if obj.image:
             return format_html(
                 '<img src="{}" style="max-height: 100px;" />', obj.image.url
@@ -43,20 +55,21 @@ class RecipesAdmin(admin.ModelAdmin):
         return 'Нет изображения'
 
 
+@admin.register(Ingredients)
 class IngredientsAdmin(admin.ModelAdmin):
-    '''Админка для ингредиентов.'''
+    """Админка для ингредиентов."""
     list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
 
 
+@admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):
-    '''Админка для тегов.'''
+    """Админка для тегов."""
     list_display = ('id', 'name', 'slug')
     search_fields = ('name',)
     list_display_links = ('id', 'name', 'slug')
 
 
-admin.site.register(Ingredients, IngredientsAdmin)
-admin.site.register(Recipes, RecipesAdmin)
-admin.site.register(Tags, TagsAdmin)
+admin.site.register(Favorites)
+admin.site.register(ShoppingList)

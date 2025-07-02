@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorites, Ingredients, Links, Recipes,
+from recipes.models import (Favorites, Ingredients, Recipes,
                             ShoppingList, Tags)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -25,7 +25,7 @@ from .serializers import (AvatarSerializer, CustomUserSerializer,
                           RecipesReadSerializer, RecipesWriteSerializer,
                           ShortLinkSerializer, SubscriptionsSerializer,
                           TagsSerialiser)
-from .utils import generate_short_link
+from .utils import unique_link
 
 PDF_START_X = 40
 PDF_START_Y = 800
@@ -41,22 +41,22 @@ class AvatarViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
-    '''Вьюсет для работы с аватаром пользователя.'''
+    """Вьюсет для работы с аватаром пользователя."""
     serializer_class = AvatarSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
-        '''Получает текущего пользователя.'''
+        """Получает текущего пользователя."""
         return self.request.user
 
     def destroy(self, request, *args, **kwargs):
-        '''Удаляет аватар пользователя.'''
+        """Удаляет аватар пользователя."""
         user = self.get_object()
         user.avatar.delete(save=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
-        '''Обновляет аватар пользователя.'''
+        """Обновляет аватар пользователя."""
         user = self.get_object()
         if user.avatar:
             user.avatar.delete(save=False)
@@ -64,7 +64,7 @@ class AvatarViewSet(
 
 
 class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
-    '''Вьюсет для работы с ингредиентами.'''
+    """Вьюсет для работы с ингредиентами."""
     permission_classes = (permissions.AllowAny,)
     serializer_class = IngredientsSerializer
     pagination_class = None
@@ -74,7 +74,7 @@ class IngrediensViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
-    '''Вьюсет для работы с тегами.'''
+    """Вьюсет для работы с тегами."""
     permission_classes = (permissions.AllowAny,)
     queryset = Tags.objects.all()
     serializer_class = TagsSerialiser
@@ -82,7 +82,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
-    '''Вьюсет для работы с рецептами.'''
+    """Вьюсет для работы с рецептами."""
     queryset = Recipes.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
@@ -90,13 +90,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        '''Возвращает сериализатор в зависимости от действия.'''
+        """Возвращает сериализатор в зависимости от действия."""
         if self.action in ['create', 'update', 'partial_update']:
             return RecipesWriteSerializer
         return RecipesReadSerializer
 
     def add_recipe_to_cart_or_favorites(self, request, model):
-        '''Добавляет рецепт в список покупок или избранное.'''
+        """Добавляет рецепт в список покупок или избранное."""
         recipe = self.get_object()
         if request.method == 'POST':
             _, created = model.objects.get_or_create(
@@ -127,7 +127,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def favorite(self, request, pk=None):
-        '''Добавляет или удаляет рецепт из избранного.'''
+        """Добавляет или удаляет рецепт из избранного."""
         return self.add_recipe_to_cart_or_favorites(request, Favorites)
 
     @action(
@@ -137,12 +137,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
-        '''Добавляет или удаляет рецепт из списка покупок.'''
+        """Добавляет или удаляет рецепт из списка покупок."""
         return self.add_recipe_to_cart_or_favorites(request, ShoppingList)
 
     @action(detail=False, methods=['get', ], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
-        '''Создает PDF-файл со списком покупок.'''
+        """Создает PDF-файл со списком покупок."""
         user = request.user
         ingredients = Ingredients.objects.filter(
             ingredients_recipe__recipe__recipes_user_shopping_list__user=user
@@ -185,37 +185,45 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get', ], url_path='get-link')
     def get_link(self, request, pk=None):
-        '''Создает короткую ссылку на рецепт.'''
+        """Отдает короткую ссылку на рецепт или создает, если ее нет."""
         recipe = self.get_object()
-        link, _ = Links.objects.get_or_create(
-            recipe=recipe,
-            defaults={'link': generate_short_link()}
-        )
-        serializer = ShortLinkSerializer(link, context={'request': request})
+        if not recipe.short_link:
+            recipe.short_link = unique_link()
+            recipe.save(update_fields=['short_link'])
+        serializer = ShortLinkSerializer(recipe, context={'request': request})
         return Response(serializer.data)
+    # def get_link(self, request, pk=None):
+    #     """Создает короткую ссылку на рецепт."""
+    #     recipe = self.get_object()
+    #     link, _ = Links.objects.get_or_create(
+    #         recipe=recipe,
+    #         defaults={'link': generate_short_link()}
+    #     )
+    #     serializer = ShortLinkSerializer(link, context={'request': request})
+    #     return Response(serializer.data)
 
 
 class ShortLinkRedirectViewSet(viewsets.ReadOnlyModelViewSet):
-    '''Вьюсет редиректа по короткой ссылке.'''
-    queryset = Links.objects.all()
-    lookup_field = 'link'
+    """Вьюсет редиректа по короткой ссылке."""
+    queryset = Recipes.objects.all()
+    lookup_field = 'short_link'
 
     def retrieve(self, request, *args, **kwargs):
-        '''Перенаправляет по короткой ссылке.'''
+        """Перенаправляет по короткой ссылке."""
         obj = self.get_object()
-        url = f'/recipes/{obj.recipe.id}/'
+        url = f'/recipes/{obj.id}/'
         return redirect(url)
 
 
 class CustomUsersViewSet(UserViewSet):
-    '''Вьюсет для работы с пользователями.'''
+    """Вьюсет для работы с пользователями."""
     serializer_class = CustomUserSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = CustomPagination
     queryset = User.objects.all()
 
     def get_permissions(self):
-        '''Возвращает разрешения в зависимости от действия.'''
+        """Возвращает разрешения в зависимости от действия."""
         if self.action in ['list', 'retrieve']:
             return (permissions.IsAuthenticatedOrReadOnly(),)
         return super().get_permissions()
@@ -226,7 +234,7 @@ class CustomUsersViewSet(UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
-        '''Возвращает информацию о текущем пользователе.'''
+        """Возвращает информацию о текущем пользователе."""
         return Response(self.get_serializer(request.user).data)
 
     @action(
@@ -236,7 +244,7 @@ class CustomUsersViewSet(UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, id=None):
-        '''Подписка на пользователя.'''
+        """Подписка на пользователя."""
         user = request.user
         try:
             subscribe = User.objects.get(id=id)
@@ -279,7 +287,7 @@ class CustomUsersViewSet(UserViewSet):
         permission_classes=(permissions.AllowAny,)
     )
     def subscriptions(self, request):
-        '''Возвращает список подписок пользователя.'''
+        """Возвращает список подписок пользователя."""
 
         user = request.user
         queryset = User.objects.filter(followers__user=user)

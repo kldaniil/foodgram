@@ -2,7 +2,7 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class AuthorOrReadOnly(BasePermission):
-    '''Разрешает доступ автору объекта или всем для чтения.'''
+    """Разрешает доступ автору объекта или всем для чтения."""
     def has_permission(self, request, view):
         return (
             request.method in SAFE_METHODS
@@ -20,7 +20,7 @@ class AuthorOrReadOnly(BasePermission):
 
 
 class UserOrReadOnly(BasePermission):
-    '''Разрешает доступ пользователю к своему объекту или всем для чтения.'''
+    """Разрешает доступ пользователю к своему объекту или всем для чтения."""
     def has_permission(self, request, view):
         return (
             request.method in SAFE_METHODS
@@ -38,7 +38,7 @@ class UserOrReadOnly(BasePermission):
 
 
 class ReadOnly(BasePermission):
-    '''Разрешает доступ только для чтения.'''
+    """Разрешает доступ только для чтения."""
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS
 

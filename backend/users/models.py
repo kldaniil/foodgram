@@ -9,7 +9,7 @@ from .constants import (EMAIL_FIELD_MAX_LENGTH, EMAIL_FIELD_MIN_LENGTH,
 
 
 class CustomUser(AbstractUser):
-    '''Кастомная модель пользователя.'''
+    """Кастомная модель пользователя."""
     username = models.CharField(
         'Имя пользователя',
         unique=True,
@@ -69,7 +69,7 @@ class CustomUser(AbstractUser):
 
 
 class Subscriptions(models.Model):
-    '''Модель для подписок пользователей.'''
+    """Модель для подписок пользователей."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
