@@ -197,7 +197,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
 
-def short_link_redirect(short_link):
+def short_link_redirect(request, short_link):
     """Перенаправляет по короткой ссылке."""
     try:
         recipe = Recipes.objects.get(short_link=short_link)
