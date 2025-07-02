@@ -111,7 +111,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post',],
+        methods=['post'],
         url_path='favorite',
         permission_classes=(permissions.IsAuthenticated,)
     )
@@ -126,7 +126,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post',],
+        methods=['post'],
         url_path='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
     )
@@ -222,7 +222,7 @@ class ExtendedUsersViewSet(UserViewSet):
 
     @action(
         detail=False,
-        methods=['get',],
+        methods=['get'],
         url_path='me/avatar',
         permission_classes=(permissions.IsAuthenticated,)
     )
@@ -266,7 +266,7 @@ class ExtendedUsersViewSet(UserViewSet):
 
     @action(
         detail=True,
-        methods=['post',],
+        methods=['post'],
         url_path='subscribe',
         permission_classes=(permissions.IsAuthenticated,)
     )
