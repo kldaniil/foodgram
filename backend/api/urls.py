@@ -1,24 +1,21 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (AvatarViewSet, CustomUsersViewSet, IngrediensViewSet,
-                    RecipesViewSet, ShortLinkRedirectViewSet, TagsViewSet)
+from .views import (ExtendedUsersViewSet, IngrediensViewSet, RecipesViewSet,
+                    TagsViewSet, short_link_redirect)
 
-v1_router = DefaultRouter()
-v1_router.register(r'ingredients', IngrediensViewSet, basename='ingredients')
-v1_router.register(r'tags', TagsViewSet, basename='tags')
-v1_router.register(r'recipes', RecipesViewSet, basename='recipes')
-v1_router.register(r'users', CustomUsersViewSet, basename='users')
-v1_router.register(
-    r's', ShortLinkRedirectViewSet, basename='short_link_redirect'
-)
+router = DefaultRouter()
+router.register('ingredients', IngrediensViewSet, basename='ingredients')
+router.register('tags', TagsViewSet, basename='tags')
+router.register('recipes', RecipesViewSet, basename='recipes')
+router.register('users', ExtendedUsersViewSet, basename='users')
 
 urlpatterns = [
     path('auth/', include('djoser.urls.authtoken')),
+    path('', include(router.urls)),
     path(
-        'users/me/avatar/',
-        view=AvatarViewSet.as_view({'put': 'update', 'delete': 'destroy'}),
-        name='Аватар'
+        's/<str:short_link>/',
+        short_link_redirect,
+        name='short_link_redirect'
     ),
-    path('', include(v1_router.urls)),
 ]

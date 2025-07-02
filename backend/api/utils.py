@@ -1,10 +1,8 @@
 import random
 import string
 
-from recipes.constants import MAX_LINK_LENGTH
+from recipes.constants import MAX_LINK_LENGTH, SHORT_LINK_LENGTH
 from recipes.models import Recipes
-
-from .constants import SHORT_LINK_LENGTH
 
 
 def generate_short_link(length=SHORT_LINK_LENGTH):

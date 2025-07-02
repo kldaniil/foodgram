@@ -1,4 +1,3 @@
-from recipes.models import Ingredients
 from rest_framework import serializers
 
 
@@ -9,16 +8,17 @@ def ingredients_validator(value):
         raise serializers.ValidationError(
             'Поле ingredients не может быть пустым'
         )
+    print("ingredients_validator got:", value)
+    print('Ключи первого элемента ingredients:', value[0].keys())
     ingredients = set()
     for item in value:
-        if not item.get('id') in ingredients:
-            ingredients.add(item.get('id'))
+        obj = item['ingredient']
+        if obj.id not in ingredients:
+            ingredients.add(obj.id)
         else:
             raise serializers.ValidationError(
                 'Ингредиенты повторяются'
             )
-        if not Ingredients.objects.filter(id=item.get('id')).exists():
-            raise serializers.ValidationError('Ингредиент не существует.')
 
     return value
 
@@ -29,15 +29,8 @@ def tags_validator(value):
         raise serializers.ValidationError(
             'Поле tags не может быть пустым'
         )
-    tags = set()
-    for item in value:
-        if item not in tags:
-            tags.add(item)
-        else:
-            raise serializers.ValidationError(
-                'Теги повторяются'
-            )
-
+    if len(value) != len(set(value)):
+        raise serializers.ValidationError(
+            'Теги повторяются'
+        )
     return value
-
-# TODO как-то объединить валидатор тегов и ингредиентов, так не красиво.

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
-# DEFAULT_PAGE_SIZE = 6
+DEFAULT_PAGE_SIZE = 6
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -136,7 +136,7 @@ MEDIA_ROOT = BASE_DIR.parent / 'user_media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'users.ExtendedUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -157,9 +157,8 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'user': 'api.serializers.ExtendedUserSerializer',
+        'current_user': 'api.serializers.ExtendedUserSerializer',
     },
     'LOGIN_FIELD': 'email',
     'PERMISSIONS': {

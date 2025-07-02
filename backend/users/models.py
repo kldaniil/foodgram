@@ -8,7 +8,7 @@ from .constants import (EMAIL_FIELD_MAX_LENGTH, EMAIL_FIELD_MIN_LENGTH,
                         USERNAME_FIELD_MAX_LENGTH, USERNAME_FIELD_MIN_LENGTH)
 
 
-class CustomUser(AbstractUser):
+class ExtendedUser(AbstractUser):
     """Кастомная модель пользователя."""
     username = models.CharField(
         'Имя пользователя',
@@ -33,7 +33,6 @@ class CustomUser(AbstractUser):
 
     first_name = models.CharField(
         'Имя',
-        blank=False,
         max_length=USERNAME_FIELD_MAX_LENGTH,
         validators=[
             MaxLengthValidator(USERNAME_FIELD_MAX_LENGTH),
@@ -43,7 +42,6 @@ class CustomUser(AbstractUser):
 
     last_name = models.CharField(
         'Фамилия',
-        blank=False,
         max_length=USERNAME_FIELD_MAX_LENGTH,
         validators=[
             MaxLengthValidator(USERNAME_FIELD_MAX_LENGTH),
@@ -59,13 +57,16 @@ class CustomUser(AbstractUser):
         default=None
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'пользователи'
-        ordering = ['id', ]
+        ordering = ['-date_joined', 'username']
 
     def __str__(self):
-        return str(self.username)
+        return self.username
 
 
 class Subscriptions(models.Model):
@@ -95,4 +96,4 @@ class Subscriptions(models.Model):
 
             )
         ]
-        ordering = ['id', ]
+        ordering = ['user', 'following']

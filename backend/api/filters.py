@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Case, IntegerField, Q, Value, When
-from django_filters.rest_framework import (AllValuesMultipleFilter,
-                                           BooleanFilter, CharFilter,
-                                           FilterSet)
-from recipes.models import Ingredients, Recipes
+from django_filters.rest_framework import (BooleanFilter, CharFilter,
+                                           FilterSet,
+                                           ModelMultipleChoiceFilter)
+
+from recipes.models import Ingredients, Recipes, Tags
 
 User = get_user_model()
 
@@ -11,8 +12,11 @@ User = get_user_model()
 class RecipesFilter(FilterSet):
     """Фильтр для рецептов."""
     is_favorited = BooleanFilter(method='filter_is_favorited')
-    tags = AllValuesMultipleFilter(field_name='tags__slug')
-    author = CharFilter(field_name='author__id')
+    tags = ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tags.objects.all(),
+    )
     is_in_shopping_cart = BooleanFilter(method='filter_is_in_shopping_cart')
 
     def filter_favorites_or_shopping(
@@ -20,9 +24,7 @@ class RecipesFilter(FilterSet):
     ):
         """Обработка фильтра по избранным или списку покупок."""
         user = self.request.user
-        if not user.is_authenticated and value:
-            return queryset.none()
-        if value:
+        if value and user.is_authenticated:
             filter_dict = {filter_field: user}
             return queryset.filter(**filter_dict)
         return queryset
@@ -47,7 +49,7 @@ class RecipesFilter(FilterSet):
 
     class Meta:
         model = Recipes
-        fields = ('tags', 'is_favorited')
+        fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
 
 class IngredientsFilter(FilterSet):

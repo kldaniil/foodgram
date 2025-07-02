@@ -119,26 +119,34 @@ class RecipesIngredients(models.Model):
     )
 
     class Meta:
-        ordering = ['recipe', ]
+        ordering = ['recipe', 'ingredient']
         verbose_name = 'Ингредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
 
 
-# class AbstractUserRecipeModel(models.Model):
-#     """Абстрактная модель для избранного и списка покупок."""
-#     recipe = models.ForeignKey(
-#         Recipes,
-#         on_delete=models.CASCADE,
-#     )
-#     user = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         on_delete=models.CASCADE,
-#     )
+class BaseUserRecipeModel(models.Model):
+    """Абстрактная модель для избранного и списка покупок."""
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
 
-#     class Meta:
-#         abstract = True
+    class Meta:
+        abstract = True
+        ordering = ['user', 'recipe']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'user'],
+                name='unique_user_recipe'
+            )
+        ]
 
-class Favorites(models.Model):
+
+class Favorites(BaseUserRecipeModel):
     """Модель для избранных рецептов пользователя."""
     recipe = models.ForeignKey(
         Recipes,
@@ -152,18 +160,11 @@ class Favorites(models.Model):
     )
 
     class Meta:
-        ordering = ['user', ]
         verbose_name = 'Избранное'
         verbose_name_plural = 'избранные'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['recipe', 'user'],
-                name='unique_user_favorite_recipe'
-            )
-        ]
 
 
-class ShoppingList(models.Model):
+class ShoppingList(BaseUserRecipeModel):
     """Модель для списка покупок пользователя."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -177,33 +178,5 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
-        ordering = ['user', ]
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['recipe', 'user'],
-                name='unique_user_shopping_recipe'
-            )
-        ]
-
-
-# class Links(models.Model):
-#     """Модель для коротких ссылок на рецепты."""
-#     recipe = models.OneToOneField(
-#         Recipes,
-#         on_delete=models.CASCADE,
-#         related_name='short_link'
-#     )
-#     link = models.CharField('ссылка', max_length=MAX_LINK_LENGTH)
-
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=['recipe', 'link'],
-#                 name='Recipe unique link'
-#             )
-#         ]
-#         ordering = ['id', ]
-#         verbose_name = 'Короткая ссылка'
-#         verbose_name_plural = 'короткие ссылки'
