@@ -115,12 +115,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
         url_path='favorite',
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def favorite(self, request):
+    def favorite(self, request, pk=None):
         """Добавляет в избранное."""
         return self.add_recipe_to_cart_or_favorites(request, Favorites)
 
     @favorite.mapping.delete
-    def delete_favorite(self, request):
+    def delete_favorite(self, request, pk=None):
         """Удаляет из избранного."""
         return self.delete_recipe_from_cart_or_favorites(request, Favorites)
 
@@ -130,7 +130,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         url_path='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def shopping_cart(self, request):
+    def shopping_cart(self, request, pk=None):
         """Добавляет рецепт в список покупок."""
         return self.add_recipe_to_cart_or_favorites(request, ShoppingList)
 
@@ -186,7 +186,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=True, methods=['get', ], url_path='get-link')
-    def get_link(self, request):
+    def get_link(self, request, pk=None):
         """Отдает короткую ссылку на рецепт или создает, если ее нет."""
         recipe = self.get_object()
         if not recipe.short_link:
