@@ -6,3 +6,4 @@ env
 db.sqlite3
 backend/user_media
 user_media
+backend/dump.json
