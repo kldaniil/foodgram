@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Case, IntegerField, Q, Value, When
-from django_filters.rest_framework import (CharFilter, FilterSet,
+from django_filters.rest_framework import (BooleanFilter, CharFilter,
+                                           FilterSet,
                                            ModelMultipleChoiceFilter)
 
 from recipes.models import Ingredients, Recipes, Tags
@@ -10,6 +11,8 @@ User = get_user_model()
 
 class RecipesFilter(FilterSet):
     """Фильтр для рецептов."""
+    is_favorited = BooleanFilter()
+    is_in_shopping_cart = BooleanFilter()
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',

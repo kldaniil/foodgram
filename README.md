@@ -3,6 +3,7 @@
 и создавать список покупок для заданных блюд.
 
 Проект доступен по адресу https://foodgram.kldaniil.ru
+Документации на API - https://foodgram.kldaniil.ru/api/docs/
 
 Инструменты и стек: 
 #python #JSON #YAML #Django #React #API #Docker #Nginx #PostgreSQL #Gunicorn #JWT #Postman
@@ -39,6 +40,7 @@
     '''
 
 проект станет доступен по адресу http://localhost:8003/
+Для просмотра документации на API в браузере открыть http://localhost/api/docs/
 
 Для запуска в виртуальном окружении:
 Развернуть виртуальное окружение и установить зависимости:
@@ -56,12 +58,3 @@
 В файле frontend/package.json в конце заменить "proxy": "http://web:8000/" на "proxy": "http://localhost:8000/"
 Перейти в терминале в папку frontend,
 выполнить npm install и npm start.
-
-Для просмотра документации на API:
-Перейти в директорию infra, выполнить
-
-    '''
-    sudo docker compose up -d
-    '''
-    
-В браузере открыть http://localhost/api/docs/

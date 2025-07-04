@@ -61,32 +61,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Получаем кварисет с аннотированными полями."""
         user = self.request.user
-        queryset = Recipes.objects.cart_and_favorites(user)
-
-        is_in_shopping_cart_param = self.request.query_params.get(
-            'is_in_shopping_cart',
-            None
-        )
-        is_favorited_param = self.request.query_params.get(
-            'is_favorited',
-            None
-        )
-
-        def get_bool_query_params(value):
-            """Возвращает булево значение для параметра запроса."""
-            return str(value) in ['1', 'True', 'true']
-
-        if is_in_shopping_cart_param is not None:
-            queryset = queryset.filter(
-                is_in_shopping_cart=get_bool_query_params(
-                    is_in_shopping_cart_param
-                )
-            )
-        if is_favorited_param is not None:
-            queryset = queryset.filter(
-                is_favorited=get_bool_query_params(is_favorited_param)
-            )
-        return queryset
+        return Recipes.objects.cart_and_favorites(user)
 
     def get_serializer_class(self):
         """Возвращает сериализатор в зависимости от действия."""
