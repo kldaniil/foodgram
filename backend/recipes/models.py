@@ -7,6 +7,8 @@ from .constants import (MAX_INGREDIENT_MEASURE_LENGTH,
                         MAX_INGREDIENT_NAME_LENGTH, MAX_LINK_LENGTH,
                         MAX_POSITIVE_VALUE, MAX_RECIPE_LENGTH, MAX_TAG_LENGTH,
                         MIN_POSITIVE_VALUE, SHORT_STRING)
+from .managers import RecipesQuerySet
+from .utils import unique_link
 
 
 class Tags(models.Model):
@@ -89,6 +91,12 @@ class Recipes(models.Model):
         'Дата создания',
         auto_now_add=True,
     )
+    objects = RecipesQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        if not self.short_link:
+            self.short_link = unique_link()
+        return super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created_at', 'name']

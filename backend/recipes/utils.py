@@ -1,8 +1,7 @@
 import random
 import string
 
-from recipes.constants import MAX_LINK_LENGTH, SHORT_LINK_LENGTH
-from recipes.models import Recipes
+from .constants import MAX_LINK_LENGTH, SHORT_LINK_LENGTH
 
 
 def generate_short_link(length=SHORT_LINK_LENGTH):
@@ -14,6 +13,8 @@ def generate_short_link(length=SHORT_LINK_LENGTH):
 
 def unique_link():
     """Возвращает уникальную короткую ссылку для рецепта."""
+    from .models import Recipes
+
     for attempt in range(MAX_LINK_LENGTH - SHORT_LINK_LENGTH + 1):
         link_length = SHORT_LINK_LENGTH + attempt
         short_link = generate_short_link(link_length)

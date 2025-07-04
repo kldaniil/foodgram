@@ -2,9 +2,8 @@ import io
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Exists, OuterRef, Sum
-from django.http import Http404, HttpResponse
-from django.shortcuts import redirect
+from django.db.models import Sum
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from reportlab.pdfbase import pdfmetrics
@@ -24,7 +23,6 @@ from .serializers import (AvatarSerializer, ExtendedUserSerializer,
                           IngredientsSerializer, RecipeFavoritesSerializer,
                           RecipesReadSerializer, RecipesWriteSerializer,
                           SubscriptionsSerializer, TagsSerialiser)
-from .utils import unique_link
 
 PDF_START_X = 40
 PDF_START_Y = 800
@@ -61,18 +59,32 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = RecipesPagination
 
     def get_queryset(self):
-        queryset = Recipes.objects.all()
+        """Получаем кварисет с аннотированными полями."""
         user = self.request.user
-        if user.is_authenticated:
-            is_favorited = Favorites.objects.filter(
-                user=user, recipe=OuterRef('pk')
+        queryset = Recipes.objects.cart_and_favorites(user)
+
+        is_in_shopping_cart_param = self.request.query_params.get(
+            'is_in_shopping_cart',
+            None
+        )
+        is_favorited_param = self.request.query_params.get(
+            'is_favorited',
+            None
+        )
+
+        def get_bool_query_params(value):
+            """Возвращает булево значение для параметра запроса."""
+            return str(value) in ['1', 'True', 'true']
+
+        if is_in_shopping_cart_param is not None:
+            queryset = queryset.filter(
+                is_in_shopping_cart=get_bool_query_params(
+                    is_in_shopping_cart_param
+                )
             )
-            is_in_shopping_cart = ShoppingList.objects.filter(
-                user=user, recipe=OuterRef('pk')
-            )
-            queryset = queryset.annotate(
-                is_favorited=Exists(is_favorited),
-                is_in_shopping_cart=Exists(is_in_shopping_cart)
+        if is_favorited_param is not None:
+            queryset = queryset.filter(
+                is_favorited=get_bool_query_params(is_favorited_param)
             )
         return queryset
 
@@ -135,7 +147,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return self.add_recipe_to_cart_or_favorites(request, ShoppingList)
 
     @shopping_cart.mapping.delete
-    def delete_shopping_cart(self, request):
+    def delete_shopping_cart(self, request, pk=None):
         """Удаляет рецепт из списка покупок."""
         return self.delete_recipe_from_cart_or_favorites(request, ShoppingList)
 
@@ -189,22 +201,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk=None):
         """Отдает короткую ссылку на рецепт или создает, если ее нет."""
         recipe = self.get_object()
-        if not recipe.short_link:
-            recipe.short_link = unique_link()
-            recipe.save(update_fields=['short_link'])
         short_link = request.build_absolute_uri(f'/s/{recipe.short_link}')
 
         return Response({'short-link': short_link}, status=status.HTTP_200_OK)
-
-
-def short_link_redirect(request, short_link):
-    """Перенаправляет по короткой ссылке."""
-    try:
-        recipe = Recipes.objects.get(short_link=short_link)
-    except Recipes.DoesNotExist:
-        raise Http404('Короткая ссылка не существует.')
-
-    return redirect(f'/recipes/{recipe.id}/')
 
 
 class ExtendedUsersViewSet(UserViewSet):
@@ -316,8 +315,7 @@ class ExtendedUsersViewSet(UserViewSet):
         )
         if subscription_count > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False, methods=['get', ],

@@ -7,7 +7,6 @@ from rest_framework import serializers
 from recipes.models import Ingredients, Recipes, RecipesIngredients, Tags
 
 from .fields import ImageField
-from .utils import unique_link
 from .validators import ingredients_validator, tags_validator
 
 User = get_user_model()
@@ -18,6 +17,13 @@ class ExtendedUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField('check_subscription',)
     avatar = serializers.ImageField(required=False, allow_null=True)
 
+    class Meta(UserSerializer.Meta):
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_subscribed', 'avatar'
+        ]
+
     def check_subscription(self, obj):
         """Проверяет, подписан ли пользователь на данного автора."""
         request = self.context.get('request')
@@ -27,27 +33,20 @@ class ExtendedUserSerializer(UserSerializer):
             and obj.followers.filter(user=request.user).exists()
         )
 
-    class Meta(UserSerializer.Meta):
-        model = User
-        fields = [
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'is_subscribed', 'avatar'
-        ]
-
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор обновления аватара."""
     avatar = ImageField(required=True, allow_null=False)
+
+    class Meta:
+        model = User
+        fields = ['avatar', ]
 
     def validate_avatar(self, value):
         """Проверяет, что аватар не пуст."""
         if not value:
             raise serializers.ValidationError('Аватар отсутствует.')
         return value
-
-    class Meta:
-        model = User
-        fields = ['avatar', ]
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -84,7 +83,6 @@ class IngredientsAmountSerializer(serializers.ModelSerializer):
 
 class RecipeFavoritesSerializer(serializers.ModelSerializer):
     """Сериализатор избранных рецептов."""
-    # image = serializers.ImageField()
 
     class Meta:
         model = Recipes
@@ -106,6 +104,13 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         allow_empty=False,
         validators=(tags_validator,)
     )
+
+    class Meta:
+        model = Recipes
+        fields = (
+            'name', 'text', 'image', 'cooking_time',
+            'tags', 'ingredients'
+        )
 
     def validate(self, attrs):
         ingredients_validator(attrs.get('ingredients'))
@@ -131,7 +136,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         """Создает рецепт."""
         request = self.context.get('request')
         validated_data['author'] = request.user
-        validated_data['short_link'] = unique_link()
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipes.objects.create(**validated_data)
@@ -155,13 +159,6 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         read_serializer = RecipesReadSerializer(instance, context=self.context)
         return read_serializer.data
 
-    class Meta:
-        model = Recipes
-        fields = (
-            'name', 'text', 'image', 'cooking_time',
-            'tags', 'ingredients'
-        )
-
 
 class RecipesReadSerializer(RecipeFavoritesSerializer):
     """Сериализатор для чтения рецептов."""
@@ -184,9 +181,15 @@ class RecipesReadSerializer(RecipeFavoritesSerializer):
 
 class SubscriptionsSerializer(ExtendedUserSerializer):
     """Сериализатор подписок."""
-
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
+        )
 
     def get_recipes(self, obj):
         """Получает рецепты пользователя."""
@@ -206,10 +209,3 @@ class SubscriptionsSerializer(ExtendedUserSerializer):
     def get_recipes_count(self, obj):
         """Считает количество рецептов пользователя."""
         return obj.recipes.count()
-
-    class Meta:
-        model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
-        )

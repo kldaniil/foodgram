@@ -169,6 +169,7 @@ jobs:
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_demo_ingredients
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py create_short_links
 
   send_message:
     runs-on: ubuntu-latest
