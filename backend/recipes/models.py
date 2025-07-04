@@ -132,15 +132,17 @@ class RecipesIngredients(models.Model):
         verbose_name_plural = 'Ингредиенты рецептов'
 
 
-class BaseUserRecipeModel(models.Model):
+class BaseCartFavoritesRecipeModel(models.Model):
     """Абстрактная модель для избранного и списка покупок."""
-    recipe = models.ForeignKey(
-        Recipes,
-        on_delete=models.CASCADE,
-    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
+        related_name='user_%(class)s'
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+        related_name='%(class)s_%(app_label)s'
     )
 
     class Meta:
@@ -149,42 +151,22 @@ class BaseUserRecipeModel(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['recipe', 'user'],
-                name='unique_user_recipe'
+                name='unique_%(class)s_user_recipe'
             )
         ]
 
 
-class Favorites(BaseUserRecipeModel):
+class Favorites(BaseCartFavoritesRecipeModel):
     """Модель для избранных рецептов пользователя."""
-    recipe = models.ForeignKey(
-        Recipes,
-        on_delete=models.CASCADE,
-        related_name='favorites_recipes'
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='user_favorites_recipes'
-    )
 
-    class Meta:
+    class Meta(BaseCartFavoritesRecipeModel.Meta):
         verbose_name = 'Избранное'
         verbose_name_plural = 'избранные'
 
 
-class ShoppingList(BaseUserRecipeModel):
+class ShoppingList(BaseCartFavoritesRecipeModel):
     """Модель для списка покупок пользователя."""
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='user_shopping_list'
-    )
-    recipe = models.ForeignKey(
-        Recipes,
-        on_delete=models.CASCADE,
-        related_name='recipes_user_shopping_list'
-    )
 
-    class Meta:
+    class Meta(BaseCartFavoritesRecipeModel.Meta):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'

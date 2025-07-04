@@ -183,7 +183,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         """Создает PDF-файл со списком покупок."""
         user = request.user
         ingredients = Ingredients.objects.filter(
-            ingredients_recipe__recipe__recipes_user_shopping_list__user=user
+            ingredients_recipe__recipe__shoppinglist_recipes__user=user
         ).values('name', 'measurement_unit').annotate(
             amount=Sum('ingredients_recipe__amount')
         ).order_by('name',)
