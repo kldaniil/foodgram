@@ -1,1 +1,2 @@
-*.py linguist-language=Python
+frontend/** linguist-vendored
+*.js linguist-vendored
